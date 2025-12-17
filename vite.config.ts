@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/omni-price/', // 🔴 BU OLMAZSA OLMAZ
+  base: '/omni-price/',
   plugins: [react()],
   resolve: {
     alias: {
