@@ -12,8 +12,8 @@ export const DEFAULT_SETTINGS: CostSetting[] = [
   { key: 'platformFee', label: 'Platform Hizmet Bedeli (Trendyol)', value: 10.2, suffix: 'TL', isPercentage: false, kdvMode: 'DAHIL', kdvRate: 20 },
   
   // Kargo
-  { key: 'marketplaceShip', label: 'Pazaryeri Kargo', value: 81.08, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
-  { key: 'marketplaceRetShip', label: 'Pazaryeri İade Kargo', value: 99.99, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'marketplaceShip', label: 'Trendyol Kargo', value: 81.08, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'marketplaceRetShip', label: 'Trendyol İade Kargo', value: 99.99, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'siteShip', label: 'Site Kargo', value: 118.9, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'pazaramaShip', label: 'Pazarama Kargo', value: 140.69, suffix: 'TL', isPercentage: false, kdvMode: 'DAHIL', kdvRate: 20 },
 
