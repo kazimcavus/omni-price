@@ -1,4 +1,4 @@
-import { CalculationInputs, ChannelResult, CostSetting, KdvMode, ProfitType, ChannelKey } from '../types';
+import { CalculationInputs, ChannelResult, CostSetting, KdvMode, ChannelKey } from '../types';
 
 // Helper: Convert to KDV Included
 export const toKdvDahil = (value: number, mode: KdvMode | undefined, rate: number | undefined): number => {
@@ -177,7 +177,6 @@ export const calculateAllChannels = (
     // Breakdown Calculation based on Final Price
     const commissionAmount = finalSalePrice * commDecimal;
     const netAfterCommission = finalSalePrice - commissionAmount;
-    const totalCost = fixedCosts; // approximate for display context
     const netProfit = finalSalePrice - commissionAmount - fixedCosts;
     
     let calculatedProfitRate = 0;

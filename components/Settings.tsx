@@ -31,7 +31,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset })
   const handleReset = () => {
     if(window.confirm("Tüm ayarları varsayılan değerlere döndürmek istediğinize emin misiniz?")) {
         setLocalSettings(DEFAULT_SETTINGS);
-        onSave(DEFAULT_SETTINGS);
+        onReset();
         setHasChanges(false);
     }
   };
