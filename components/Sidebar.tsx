@@ -11,10 +11,17 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ selectedChannels, onToggleChannel, results, onToast }) => {
   
   const handleBulkCopy = () => {
-    // Format: TY: 1769,99 | HB: 1789,99 ...
+    // Format: Trendyol: 1769,99 / 1999,99 | Hepsiburada: 1789,99 ...
     const text = results
       .filter(r => selectedChannels.includes(r.channelKey) && !r.error)
-      .map(r => `${r.channelKey}: ${r.salePrice.toFixed(2).replace('.', ',')}`)
+      .map(r => {
+        const salePrice = r.salePrice.toFixed(2).replace('.', ',');
+        if (r.listPrice) {
+          const listPrice = r.listPrice.toFixed(2).replace('.', ',');
+          return `${r.channelName}: ${salePrice} / ${listPrice}`;
+        }
+        return `${r.channelName}: ${salePrice}`;
+      })
       .join(' | ');
     
     if (text) {

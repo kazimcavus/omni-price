@@ -1,4 +1,4 @@
-export type ChannelKey = 'TY' | 'HB' | 'SITE' | 'PAZARAMA';
+export type ChannelKey = 'TY' | 'HB' | 'SITE' | 'PAZARAMA' | 'SABIT_FIYAT';
 export type KdvMode = 'DAHIL' | 'HARIC';
 export type ProfitType = 'MARGIN' | 'MARKUP'; // MARGIN = Satıştan, MARKUP = Maliyetten
 
@@ -17,6 +17,7 @@ export interface CalculationInputs {
   productKdvRate: number;
   returnRate: number;
   targetProfitRate: number;
+  sabitFiyatTargetProfitRate: number; // Ayrı kar oranı for Sabit Fiyat
   profitType: ProfitType;
   includeOverhead: boolean;
   discountRate: number; // Optional
@@ -57,4 +58,5 @@ export const CHANNELS: { key: ChannelKey; label: string }[] = [
   { key: 'TY', label: 'Trendyol' },
   { key: 'HB', label: 'Hepsiburada' },
   { key: 'PAZARAMA', label: 'Pazarama' },
+  { key: 'SABIT_FIYAT', label: 'Sabit Fiyat' },
 ];

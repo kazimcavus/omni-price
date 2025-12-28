@@ -86,6 +86,24 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
         </div>
       </div>
 
+      <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* Sabit Fiyat Target Profit */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Sabit Fiyat Hedef Kâr Oranı</label>
+          <div className="relative rounded-md shadow-sm">
+            <input
+              type="number"
+              value={inputs.sabitFiyatTargetProfitRate}
+              onChange={(e) => handleChange('sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
+              className="block w-full rounded-md border-slate-300 pl-3 pr-8 py-2 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900 appearance-none"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <span className="text-slate-500 sm:text-sm">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-end">
         {/* Profit Type */}
         <div>

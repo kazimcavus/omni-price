@@ -18,15 +18,26 @@ const App: React.FC = () => {
 
   const [inputs, setInputs] = useState<CalculationInputs>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_INPUTS);
-    return saved ? JSON.parse(saved) : {
+    const defaultInputs = {
       productCostExKdv: 100,
       productKdvRate: 10,
       returnRate: 20,
       targetProfitRate: 20,
-      profitType: 'MARGIN',
+      sabitFiyatTargetProfitRate: 20,
+      profitType: 'MARGIN' as const,
       includeOverhead: true,
       discountRate: 0
     };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Eski localStorage verilerinde sabitFiyatTargetProfitRate olmayabilir
+      return {
+        ...defaultInputs,
+        ...parsed,
+        sabitFiyatTargetProfitRate: parsed.sabitFiyatTargetProfitRate ?? defaultInputs.sabitFiyatTargetProfitRate
+      };
+    }
+    return defaultInputs;
   });
 
   const [selectedChannels, setSelectedChannels] = useState<ChannelKey[]>(() => {

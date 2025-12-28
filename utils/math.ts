@@ -85,12 +85,13 @@ export const calculateAllChannels = (
 
   const results: ChannelResult[] = [];
 
-  // 3. Process each channel (Order: Web, TY, HB, Pazarama)
+  // 3. Process each channel (Order: Web, TY, HB, Pazarama, Sabit Fiyat)
   const channelsToProcess: { key: ChannelKey; name: string }[] = [
     { key: 'SITE', name: 'Web' },
     { key: 'TY', name: 'Trendyol' },
     { key: 'HB', name: 'Hepsiburada' },
     { key: 'PAZARAMA', name: 'Pazarama' },
+    { key: 'SABIT_FIYAT', name: 'Sabit Fiyat' },
   ];
 
   channelsToProcess.forEach(ch => {
@@ -128,6 +129,13 @@ export const calculateAllChannels = (
         currentShip = shipExpPazarama;
         currentPlatformFee = 0; // Usually no per-transaction fee, just comm
         break;
+      case 'SABIT_FIYAT':
+        // Sabit Fiyat: Trendyol ile aynı hesaplama mantığı
+        commissionRate = getSetting('tyCommission').value;
+        currentInvoice = invoiceMarketplace;
+        currentShip = shipExpMarketplace;
+        currentPlatformFee = platformFeeVal;
+        break;
     }
 
     fixedCosts = currentShip + productCost + packExpected + currentInvoice + currentPlatformFee;
@@ -137,7 +145,10 @@ export const calculateAllChannels = (
     let error: string | undefined = undefined;
 
     const commDecimal = commissionRate / 100;
-    const target = inputs.targetProfitRate / 100;
+    // Sabit Fiyat için ayrı kar oranı kullan
+    const target = ch.key === 'SABIT_FIYAT' 
+      ? inputs.sabitFiyatTargetProfitRate / 100 
+      : inputs.targetProfitRate / 100;
 
     if (inputs.profitType === 'MARGIN') {
       // Price = Fixed / (1 - Comm - TargetMargin)
