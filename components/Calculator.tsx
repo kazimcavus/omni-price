@@ -14,6 +14,21 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
     onChange({ ...inputs, [field]: value });
   };
 
+  // Number input için özel handler - sıfır başlarını ve boş değerleri düzgün handle eder
+  const handleNumberChange = (field: keyof CalculationInputs, e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Boş string ise 0
+    if (value === '' || value === null || value === undefined) {
+      handleChange(field, 0);
+      return;
+    }
+    
+    // Parse et, geçerli bir sayı değilse 0
+    const numValue = parseFloat(value);
+    handleChange(field, isNaN(numValue) ? 0 : numValue);
+  };
+
   const handleSave = () => {
     if (modelCode.trim()) {
       onSave?.(modelCode.trim());
@@ -42,8 +57,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               type="number"
               min="0"
               step="0.01"
-              value={inputs.productCostExKdv}
-              onChange={(e) => handleChange('productCostExKdv', parseFloat(e.target.value) || 0)}
+              value={inputs.productCostExKdv === 0 ? '' : inputs.productCostExKdv}
+              onChange={(e) => handleNumberChange('productCostExKdv', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -60,8 +75,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               type="number"
               min="0"
               step="0.1"
-              value={inputs.productKdvRate}
-              onChange={(e) => handleChange('productKdvRate', parseFloat(e.target.value) || 0)}
+              value={inputs.productKdvRate === 0 ? '' : inputs.productKdvRate}
+              onChange={(e) => handleNumberChange('productKdvRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -79,8 +94,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               min="0"
               max="99"
               step="0.1"
-              value={inputs.returnRate}
-              onChange={(e) => handleChange('returnRate', parseFloat(e.target.value) || 0)}
+              value={inputs.returnRate === 0 ? '' : inputs.returnRate}
+              onChange={(e) => handleNumberChange('returnRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -96,8 +111,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
             <input
               type="number"
               step="0.1"
-              value={inputs.targetProfitRate}
-              onChange={(e) => handleChange('targetProfitRate', parseFloat(e.target.value) || 0)}
+              value={inputs.targetProfitRate === 0 ? '' : inputs.targetProfitRate}
+              onChange={(e) => handleNumberChange('targetProfitRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -115,8 +130,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
             <input
               type="number"
               step="0.1"
-              value={inputs.sabitFiyatTargetProfitRate}
-              onChange={(e) => handleChange('sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
+              value={inputs.sabitFiyatTargetProfitRate === 0 ? '' : inputs.sabitFiyatTargetProfitRate}
+              onChange={(e) => handleNumberChange('sabitFiyatTargetProfitRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -177,7 +192,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               step="0.1"
               placeholder="0"
               value={inputs.discountRate === 0 ? '' : inputs.discountRate}
-              onChange={(e) => handleChange('discountRate', parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleNumberChange('discountRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all placeholder:text-slate-400"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
