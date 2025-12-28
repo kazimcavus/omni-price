@@ -31,3 +31,4 @@ export const DEFAULT_SETTINGS: CostSetting[] = [
 export const STORAGE_KEY_SETTINGS = 'sales_price_calc_settings_v1';
 export const STORAGE_KEY_INPUTS = 'sales_price_calc_inputs_v1';
 export const STORAGE_KEY_CHANNELS = 'sales_price_calc_channels_v1';
+export const STORAGE_KEY_SAVED_ITEMS = 'sales_price_calc_saved_items_v1';

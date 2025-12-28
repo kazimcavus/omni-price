@@ -1,32 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CalculationInputs } from '../types';
 
 interface CalculatorProps {
   inputs: CalculationInputs;
   onChange: (inputs: CalculationInputs) => void;
+  onSave?: (modelCode: string) => void;
 }
 
-export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
+export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave }) => {
+  const [modelCode, setModelCode] = useState('');
+
   const handleChange = (field: keyof CalculationInputs, value: any) => {
     onChange({ ...inputs, [field]: value });
   };
 
+  const handleSave = () => {
+    if (modelCode.trim()) {
+      onSave?.(modelCode.trim());
+      setModelCode('');
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
-      <h2 className="text-lg font-semibold text-slate-800 mb-4 border-b pb-2">Ürün Maliyet Girişi</h2>
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center">
+          <svg className="w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-semibold text-slate-900">Ürün Maliyet Girişi</h2>
+      </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         
         {/* Cost */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Ürün Maliyeti (KDV Hariç)</label>
-          <div className="relative rounded-md shadow-sm">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Ürün Maliyeti (KDV Hariç)</label>
+          <div className="relative rounded-lg shadow-sm">
             <input
               type="number"
               min="0"
+              step="0.01"
               value={inputs.productCostExKdv}
               onChange={(e) => handleChange('productCostExKdv', parseFloat(e.target.value) || 0)}
-              className="block w-full rounded-md border-slate-300 pl-3 pr-8 py-2 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900 appearance-none"
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <span className="text-slate-500 sm:text-sm">TL</span>
@@ -36,14 +54,15 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
 
         {/* VAT Rate */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Ürün KDV Oranı</label>
-          <div className="relative rounded-md shadow-sm">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Ürün KDV Oranı</label>
+          <div className="relative rounded-lg shadow-sm">
             <input
               type="number"
               min="0"
+              step="0.1"
               value={inputs.productKdvRate}
               onChange={(e) => handleChange('productKdvRate', parseFloat(e.target.value) || 0)}
-              className="block w-full rounded-md border-slate-300 pl-3 pr-8 py-2 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900 appearance-none"
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <span className="text-slate-500 sm:text-sm">%</span>
@@ -53,15 +72,16 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
 
         {/* Return Rate */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Tahmini İade Oranı</label>
-          <div className="relative rounded-md shadow-sm">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Tahmini İade Oranı</label>
+          <div className="relative rounded-lg shadow-sm">
             <input
               type="number"
               min="0"
               max="99"
+              step="0.1"
               value={inputs.returnRate}
               onChange={(e) => handleChange('returnRate', parseFloat(e.target.value) || 0)}
-              className="block w-full rounded-md border-slate-300 pl-3 pr-8 py-2 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900 appearance-none"
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <span className="text-slate-500 sm:text-sm">%</span>
@@ -71,13 +91,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
 
         {/* Target Profit */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Hedef Kâr Oranı</label>
-          <div className="relative rounded-md shadow-sm">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Hedef Kâr Oranı</label>
+          <div className="relative rounded-lg shadow-sm">
             <input
               type="number"
+              step="0.1"
               value={inputs.targetProfitRate}
               onChange={(e) => handleChange('targetProfitRate', parseFloat(e.target.value) || 0)}
-              className="block w-full rounded-md border-slate-300 pl-3 pr-8 py-2 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900 appearance-none"
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <span className="text-slate-500 sm:text-sm">%</span>
@@ -89,13 +110,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Sabit Fiyat Target Profit */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Sabit Fiyat Hedef Kâr Oranı</label>
-          <div className="relative rounded-md shadow-sm">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Sabit Fiyat Hedef Kâr Oranı</label>
+          <div className="relative rounded-lg shadow-sm">
             <input
               type="number"
+              step="0.1"
               value={inputs.sabitFiyatTargetProfitRate}
               onChange={(e) => handleChange('sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
-              className="block w-full rounded-md border-slate-300 pl-3 pr-8 py-2 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900 appearance-none"
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <span className="text-slate-500 sm:text-sm">%</span>
@@ -107,11 +129,11 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-end">
         {/* Profit Type */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Kâr Hesaplama Tipi</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Kâr Hesaplama Tipi</label>
           <select
             value={inputs.profitType}
             onChange={(e) => handleChange('profitType', e.target.value)}
-            className="block w-full rounded-md border-slate-300 py-2 pl-3 pr-10 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900"
+            className="block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 transition-all cursor-pointer"
           >
             <option value="MARGIN">Satış Fiyatından (Margin)</option>
             <option value="MARKUP">Maliyet Üzerine (Markup)</option>
@@ -146,16 +168,17 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
 
         {/* Discount (Optional) */}
         <div>
-           <label className="block text-sm font-medium text-slate-700 mb-1">Kampanya/İndirim Oranı (Opsiyonel)</label>
-            <div className="relative rounded-md shadow-sm">
+           <label className="block text-sm font-medium text-slate-700 mb-2">Kampanya/İndirim Oranı (Opsiyonel)</label>
+            <div className="relative rounded-lg shadow-sm">
             <input
               type="number"
               min="0"
               max="99"
+              step="0.1"
               placeholder="0"
               value={inputs.discountRate === 0 ? '' : inputs.discountRate}
               onChange={(e) => handleChange('discountRate', parseFloat(e.target.value) || 0)}
-              className="block w-full rounded-md border-slate-300 pl-3 pr-8 py-2 focus:border-brand-500 focus:ring-brand-500 sm:text-sm border bg-white text-slate-900 appearance-none"
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all placeholder:text-slate-400"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <span className="text-slate-500 sm:text-sm">%</span>
@@ -164,6 +187,47 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange }) => {
         </div>
 
       </div>
+
+      {/* Model Code and Save Section */}
+      {onSave && (
+        <div className="mt-6 pt-6 border-t border-slate-200">
+          <div className="flex items-center gap-2 mb-4">
+            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            <h3 className="text-sm font-semibold text-slate-800">Model Kodu Kaydet</h3>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Model Kodu</label>
+              <input
+                type="text"
+                value={modelCode}
+                onChange={(e) => setModelCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && modelCode.trim()) {
+                    handleSave();
+                  }
+                }}
+                placeholder="Örn: ABC-123"
+                className="block w-full rounded-lg border-slate-300 pl-3 pr-3 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 transition-all placeholder:text-slate-400"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleSave}
+                disabled={!modelCode.trim()}
+                className="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-sm shadow-sm"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
