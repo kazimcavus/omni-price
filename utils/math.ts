@@ -81,7 +81,7 @@ export const calculateAllChannels = (
 
   const shipExpMarketplace = calcShippingExpected('marketplaceShip', 'marketplaceRetShip');
   const shipExpSite = calcShippingExpected('siteShip', null); // Usually returns are same for site or defined simply
-  const shipExpPazarama = calcShippingExpected('pazaramaShip', 'marketplaceRetShip'); // Assuming similar return logic
+  const shipExpPazarama = calcShippingExpected('pazaramaShip', 'pazaramaShip'); // Pazarama için giden ve iade kargo aynı
 
   const results: ChannelResult[] = [];
 
