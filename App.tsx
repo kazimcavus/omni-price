@@ -3,9 +3,13 @@ import { Settings } from './components/Settings';
 import { Calculator } from './components/Calculator';
 import { ResultCard } from './components/ResultCard';
 import { Sidebar } from './components/Sidebar';
-import { CostSetting, CalculationInputs, ChannelKey, CHANNELS } from './types';
-import { DEFAULT_SETTINGS, STORAGE_KEY_SETTINGS, STORAGE_KEY_INPUTS, STORAGE_KEY_CHANNELS } from './constants';
+import { SavedItems } from './components/SavedItems';
+import { Modal } from './components/Modal';
+import { DuplicateModelModal } from './components/DuplicateModelModal';
+import { CostSetting, CalculationInputs, ChannelKey, CHANNELS, SavedPriceItem } from './types';
+import { DEFAULT_SETTINGS, STORAGE_KEY_SETTINGS, STORAGE_KEY_INPUTS, STORAGE_KEY_CHANNELS, STORAGE_KEY_SAVED_ITEMS } from './constants';
 import { calculateAllChannels } from './utils/math';
+import { exportToExcel } from './utils/export';
 
 const App: React.FC = () => {
   // --- State ---
@@ -45,7 +49,16 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : CHANNELS.map(c => c.key);
   });
 
+  const [savedItems, setSavedItems] = useState<SavedPriceItem[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_SAVED_ITEMS);
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [pendingModelCode, setPendingModelCode] = useState<string | null>(null);
+  const [pendingItem, setPendingItem] = useState<SavedPriceItem | null>(null);
 
   // --- Effects ---
   useEffect(() => {
@@ -59,6 +72,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_CHANNELS, JSON.stringify(selectedChannels));
   }, [selectedChannels]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SAVED_ITEMS, JSON.stringify(savedItems));
+  }, [savedItems]);
 
   // Toast Timer
   useEffect(() => {
@@ -80,6 +97,80 @@ const App: React.FC = () => {
     setToastMsg(`Kopyalandı: ${text}`);
   };
 
+  const handleSaveModel = (modelCode: string) => {
+    const newItem: SavedPriceItem = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      modelCode,
+      timestamp: Date.now(),
+      discountRate: inputs.discountRate,
+      results: results.filter(r => !r.error)
+    };
+
+    // Check for duplicate model code (case-insensitive)
+    const existingItem = savedItems.find(
+      item => item.modelCode.toLowerCase() === modelCode.toLowerCase()
+    );
+
+    if (existingItem) {
+      // Show duplicate modal
+      setPendingModelCode(modelCode);
+      setPendingItem(newItem);
+      setShowDuplicateModal(true);
+    } else {
+      // Save directly
+      setSavedItems(prev => [newItem, ...prev]);
+      setToastMsg(`Model "${modelCode}" kaydedildi!`);
+    }
+  };
+
+  const handleReplaceModel = () => {
+    if (pendingItem && pendingModelCode) {
+      setSavedItems(prev => {
+        // Remove existing item with same model code and add new one
+        const filtered = prev.filter(
+          item => item.modelCode.toLowerCase() !== pendingModelCode.toLowerCase()
+        );
+        return [pendingItem, ...filtered];
+      });
+      setToastMsg(`Model "${pendingModelCode}" güncellendi!`);
+      setPendingItem(null);
+      setPendingModelCode(null);
+    }
+  };
+
+  const handleKeepBoth = () => {
+    if (pendingItem) {
+      setSavedItems(prev => [pendingItem, ...prev]);
+      setToastMsg(`Model "${pendingItem.modelCode}" kaydedildi!`);
+      setPendingItem(null);
+      setPendingModelCode(null);
+    }
+  };
+
+  const handleDeleteItem = (id: string) => {
+    setSavedItems(prev => prev.filter(item => item.id !== id));
+    setToastMsg('Model silindi!');
+  };
+
+  const handleExport = (items: SavedPriceItem[]) => {
+    try {
+      exportToExcel(items);
+      setToastMsg('Excel dosyası indirildi!');
+    } catch (error) {
+      setToastMsg('Excel export hatası!');
+      console.error(error);
+    }
+  };
+
+  const handleClearAll = () => {
+    setShowClearModal(true);
+  };
+
+  const confirmClearAll = () => {
+    setSavedItems([]);
+    setToastMsg('Tüm modeller silindi!');
+  };
+
   // --- Calculation ---
   // Memoized to prevent recalculation on unrelated renders, though calculation is cheap here
   const results = useMemo(() => {
@@ -99,7 +190,7 @@ const App: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 36v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h1 className="ml-3 text-xl font-bold text-slate-800 tracking-tight">OmniPrice</h1>
+              <h1 className="ml-3 text-xl font-bold text-slate-900 tracking-tight">OmniPrice</h1>
             </div>
             <nav className="flex space-x-4">
               <button
@@ -169,32 +260,81 @@ const App: React.FC = () => {
 
             {/* Calculator Area */}
             <div className="lg:col-span-9">
-              <Calculator inputs={inputs} onChange={setInputs} />
+              <Calculator inputs={inputs} onChange={setInputs} onSave={handleSaveModel} />
               
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-2 mb-6">
                  {results
                     .filter(r => selectedChannels.includes(r.channelKey))
                     .map(r => (
                       <ResultCard key={r.channelKey} result={r} onCopy={handleCopyToast} />
                  ))}
                  {results.filter(r => selectedChannels.includes(r.channelKey)).length === 0 && (
-                    <div className="col-span-full text-center py-12 text-slate-500">
-                        Hiçbir kanal seçili değil. Sol menüden kanal seçiniz.
+                    <div className="col-span-full text-center py-16">
+                      <svg className="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <p className="text-sm font-medium text-slate-500">Hiçbir kanal seçili değil</p>
+                      <p className="text-xs text-slate-400 mt-1">Sol menüden kanal seçiniz</p>
                     </div>
                  )}
               </div>
+
+              <SavedItems 
+                items={savedItems} 
+                onDelete={handleDeleteItem}
+                onExport={handleExport}
+                onClearAll={handleClearAll}
+              />
             </div>
           </div>
         )}
       </main>
 
+      {/* Clear Confirmation Modal */}
+      <Modal
+        isOpen={showClearModal}
+        onClose={() => setShowClearModal(false)}
+        onConfirm={confirmClearAll}
+        title="Tüm Modelleri Sil"
+        message="Tüm kaydedilmiş modelleri silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        confirmText="Tamam"
+        cancelText="İptal"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+      />
+
+      {/* Duplicate Model Modal */}
+      {pendingModelCode && (
+        <DuplicateModelModal
+          isOpen={showDuplicateModal}
+          onClose={() => {
+            setShowDuplicateModal(false);
+            setPendingModelCode(null);
+            setPendingItem(null);
+          }}
+          onReplace={handleReplaceModel}
+          onKeepBoth={handleKeepBoth}
+          modelCode={pendingModelCode}
+        />
+      )}
+
       {/* Toast Notification */}
       {toastMsg && (
-        <div className="fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-md shadow-lg flex items-center z-50 animate-fade-in-up">
-           <svg className="h-5 w-5 text-green-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-           </svg>
-           {toastMsg}
+        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-3 z-50 animate-fade-in-up min-w-[280px] max-w-md">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-slate-100 flex-1">{toastMsg}</p>
+          <button
+            onClick={() => setToastMsg(null)}
+            className="flex-shrink-0 text-slate-400 hover:text-white transition-colors"
+            aria-label="Kapat"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
     </div>

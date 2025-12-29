@@ -60,3 +60,11 @@ export const CHANNELS: { key: ChannelKey; label: string }[] = [
   { key: 'PAZARAMA', label: 'Pazarama' },
   { key: 'SABIT_FIYAT', label: 'Sabit Fiyat' },
 ];
+
+export interface SavedPriceItem {
+  id: string;
+  modelCode: string;
+  timestamp: number;
+  discountRate: number;
+  results: ChannelResult[];
+}
