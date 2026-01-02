@@ -59,3 +59,15 @@ input[type=number] {
 * {
   @apply transition-colors duration-200;
 }
+
+/* Keep scrollbar space to prevent layout shift between tabs */
+html {
+  min-height: 100%;
+  overflow-y: scroll;
+}
+body {
+  overflow-y: scroll;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+}

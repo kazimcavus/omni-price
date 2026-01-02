@@ -23,6 +23,35 @@ export interface CalculationInputs {
   discountRate: number; // Optional
 }
 
+// Bulk upload types
+export interface UploadedRow {
+  modelCode: string;
+  category: string;
+  cost: number;
+  returnRate: number;
+  kdvRate: number;
+}
+
+export interface CategoryRate {
+  category: string;
+  targetProfitRate: number;
+  sabitFiyatTargetProfitRate: number;
+  discountRate: number;
+}
+
+export type CategoryRateMap = Record<string, CategoryRate>;
+
+export interface BulkResultItem {
+  modelCode: string;
+  category: string;
+  cost: number;
+  returnRate: number;
+  kdvRate: number;
+  discountRate: number;
+  timestamp: number;
+  results: ChannelResult[];
+}
+
 export interface CalculatedCostDetail {
   label: string;
   value: number;

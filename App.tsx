@@ -6,14 +6,15 @@ import { Sidebar } from './components/Sidebar';
 import { SavedItems } from './components/SavedItems';
 import { Modal } from './components/Modal';
 import { DuplicateModelModal } from './components/DuplicateModelModal';
-import { CostSetting, CalculationInputs, ChannelKey, CHANNELS, SavedPriceItem } from './types';
+import { CostSetting, CalculationInputs, ChannelKey, CHANNELS, SavedPriceItem, BulkResultItem } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEY_SETTINGS, STORAGE_KEY_INPUTS, STORAGE_KEY_CHANNELS, STORAGE_KEY_SAVED_ITEMS } from './constants';
 import { calculateAllChannels } from './utils/math';
 import { exportToExcel } from './utils/export';
+import { BulkWizard } from './components/BulkWizard';
 
 const App: React.FC = () => {
   // --- State ---
-  const [activeTab, setActiveTab] = useState<'CALC' | 'SETTINGS'>('CALC');
+  const [activeTab, setActiveTab] = useState<'CALC' | 'BULK' | 'SETTINGS'>('CALC');
   
   const [settings, setSettings] = useState<CostSetting[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
@@ -152,6 +153,28 @@ const App: React.FC = () => {
     setToastMsg('Model silindi!');
   };
 
+  const bulkResultsToSavedItems = (items: BulkResultItem[]): SavedPriceItem[] => {
+    return items.map(item => ({
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      modelCode: item.modelCode,
+      timestamp: item.timestamp,
+      discountRate: item.discountRate,
+      results: item.results.filter(r => !r.error),
+    }));
+  };
+
+  const handleBulkAppend = (items: BulkResultItem[]) => {
+    const mapped = bulkResultsToSavedItems(items);
+    setSavedItems(prev => [...mapped, ...prev]);
+    setToastMsg('Toplu fiyatlar listeye eklendi.');
+  };
+
+  const handleBulkReplace = (items: BulkResultItem[]) => {
+    const mapped = bulkResultsToSavedItems(items);
+    setSavedItems(mapped);
+    setToastMsg('Liste temizlendi ve yeni fiyatlar eklendi.');
+  };
+
   const handleExport = (items: SavedPriceItem[]) => {
     try {
       exportToExcel(items);
@@ -204,6 +227,16 @@ const App: React.FC = () => {
                 Hesaplama
               </button>
               <button
+                onClick={() => setActiveTab('BULK')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full transition-colors ${
+                  activeTab === 'BULK'
+                    ? 'border-brand-500 text-slate-900'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                Liste Yükle
+              </button>
+              <button
                 onClick={() => setActiveTab('SETTINGS')}
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full transition-colors ${
                   activeTab === 'SETTINGS'
@@ -220,14 +253,15 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {activeTab === 'SETTINGS' ? (
+        {activeTab === 'SETTINGS' && (
           <Settings 
             settings={settings} 
             onSave={setSettings} 
             onReset={() => setSettings(DEFAULT_SETTINGS)} 
           />
-        ) : (
+        )}
+
+        {activeTab === 'CALC' && (
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             {/* Sidebar */}
             <div className="hidden lg:block lg:col-span-3">
@@ -241,7 +275,7 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Mobile Sidebar (Just simple toggles above content for mobile if needed, or rely on responsive layout) */}
+            {/* Mobile Sidebar */}
             <div className="lg:hidden mb-6 bg-white p-4 rounded-lg shadow-sm">
                 <div className="flex overflow-x-auto space-x-4 pb-2">
                    {CHANNELS.map(ch => (
@@ -279,6 +313,27 @@ const App: React.FC = () => {
                  )}
               </div>
 
+              <SavedItems 
+                items={savedItems} 
+                onDelete={handleDeleteItem}
+                onExport={handleExport}
+                onClearAll={handleClearAll}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'BULK' && (
+          <div className="max-w-7xl mx-auto">
+            <BulkWizard
+              settings={settings}
+              baseInputs={inputs}
+              onToast={(msg) => setToastMsg(msg)}
+              onAppend={handleBulkAppend}
+              onReplace={handleBulkReplace}
+              hasSavedItems={savedItems.length > 0}
+            />
+            <div className="mt-6">
               <SavedItems 
                 items={savedItems} 
                 onDelete={handleDeleteItem}

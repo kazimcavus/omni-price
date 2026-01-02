@@ -14,8 +14,8 @@ export const DEFAULT_SETTINGS: CostSetting[] = [
   // Kargo
   { key: 'marketplaceShip', label: 'Trendyol Kargo', value: 101.46, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'marketplaceRetShip', label: 'Trendyol İade Kargo', value: 129.99, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
-  { key: 'siteShip', label: 'Site Kargo', value: 118.9, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
-  { key: 'pazaramaShip', label: 'Pazarama Kargo', value: 140.69, suffix: 'TL', isPercentage: false, kdvMode: 'DAHIL', kdvRate: 20 },
+  { key: 'siteShip', label: 'Site Kargo', value: 156, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'pazaramaShip', label: 'Pazarama Kargo', value: 134.33, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
 
   // Ambalaj
   { key: 'box', label: 'Kutu', value: 12.75, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
@@ -32,3 +32,4 @@ export const STORAGE_KEY_SETTINGS = 'sales_price_calc_settings_v1';
 export const STORAGE_KEY_INPUTS = 'sales_price_calc_inputs_v1';
 export const STORAGE_KEY_CHANNELS = 'sales_price_calc_channels_v1';
 export const STORAGE_KEY_SAVED_ITEMS = 'sales_price_calc_saved_items_v1';
+export const STORAGE_KEY_BULK_STATE = 'sales_price_calc_bulk_state_v1';
