@@ -113,7 +113,7 @@ export const calculateAllChannels = (
         break;
       case 'HB':
         commissionRate = getSetting('hbCommission').value;
-        currentInvoice = invoiceMarketplace;
+        currentInvoice = invoiceSite; // HB için e-fatura site fiyatından
         currentShip = shipExpMarketplace;
         currentPlatformFee = 0; // HB has no platform fee
         break;
@@ -125,7 +125,7 @@ export const calculateAllChannels = (
         break;
       case 'PAZARAMA':
         commissionRate = getSetting('pazaramaCommission').value;
-        currentInvoice = invoiceMarketplace; // Assuming uses marketplace e-invoice
+        currentInvoice = invoiceSite; // Pazarama için e-fatura site fiyatından
         currentShip = shipExpPazarama;
         currentPlatformFee = 0; // Usually no per-transaction fee, just comm
         break;
