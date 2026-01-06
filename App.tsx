@@ -86,6 +86,23 @@ const App: React.FC = () => {
     }
   }, [toastMsg]);
 
+  // Prevent number input value change on scroll
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number') {
+        const input = target as HTMLInputElement;
+        if (document.activeElement === input) {
+          e.preventDefault();
+          input.blur();
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, []);
+
   // --- Handlers ---
   const handleToggleChannel = (key: ChannelKey) => {
     setSelectedChannels(prev => 
