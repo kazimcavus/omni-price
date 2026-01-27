@@ -41,8 +41,6 @@ export interface CategoryRate {
   sabitFiyatTargetProfitRate: number;
   discountRate: number;
   influencerCommissionRate: number;
-  influencerChannels: ChannelKey[];
-  includeInfluencerInProfit: boolean;
 }
 
 export type CategoryRateMap = Record<string, CategoryRate>;

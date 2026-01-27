@@ -4,9 +4,10 @@ import { ChannelResult } from '../types';
 interface ResultCardProps {
   result: ChannelResult;
   onCopy: (text: string) => void;
+  includeInfluencerInProfit: boolean;
 }
 
-export const ResultCard: React.FC<ResultCardProps> = ({ result, onCopy }) => {
+export const ResultCard: React.FC<ResultCardProps> = ({ result, onCopy, includeInfluencerInProfit }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const formatCurrency = (val: number) => 
@@ -156,7 +157,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onCopy }) => {
                         <span className="font-mono text-red-600">{formatCurrency(result.breakdown.platformFee)}</span>
                     </div>
                 )}
-                {result.breakdown.influencerCommissionAmount > 0 && (
+                {result.breakdown.influencerCommissionAmount > 0 && includeInfluencerInProfit && (
                     <div className="flex justify-between py-1 border-b border-slate-200">
                         <span className="text-slate-600">Influencer Komisyonu</span>
                         <span className="font-mono text-purple-600">{formatCurrency(result.breakdown.influencerCommissionAmount)}</span>

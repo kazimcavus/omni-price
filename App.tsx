@@ -323,7 +323,7 @@ const App: React.FC = () => {
                  {results
                     .filter(r => selectedChannels.includes(r.channelKey))
                     .map(r => (
-                      <ResultCard key={r.channelKey} result={r} onCopy={handleCopyToast} />
+                      <ResultCard key={r.channelKey} result={r} onCopy={handleCopyToast} includeInfluencerInProfit={inputs.includeInfluencerInProfit} />
                  ))}
                  {results.filter(r => selectedChannels.includes(r.channelKey)).length === 0 && (
                     <div className="col-span-full text-center py-16">

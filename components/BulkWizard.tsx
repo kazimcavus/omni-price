@@ -54,7 +54,8 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
   const [warnings, setWarnings] = useState<string[]>([]);
   const [showSaveChoice, setShowSaveChoice] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [bulkInfluencerChannels, setBulkInfluencerChannels] = useState<ChannelKey[]>(baseInputs.influencerChannels || ['TY']);
+  const [bulkIncludeInfluencerInProfit, setBulkIncludeInfluencerInProfit] = useState<boolean>(baseInputs.includeInfluencerInProfit ?? false);
 
   // Load persisted state
   useEffect(() => {
@@ -143,8 +144,6 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
             sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
             discountRate: baseInputs.discountRate,
             influencerCommissionRate: baseInputs.influencerCommissionRate,
-            influencerChannels: baseInputs.influencerChannels || ['TY'],
-            includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
           };
         }
       });
@@ -163,7 +162,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
     }
   };
 
-  const handleRateChange = (category: string, field: keyof CategoryRate, value: number | ChannelKey[] | boolean) => {
+  const handleRateChange = (category: string, field: keyof CategoryRate, value: number) => {
     setCategoryRates(prev => ({
       ...prev,
       [category]: {
@@ -173,29 +172,17 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
           sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
           discountRate: baseInputs.discountRate,
           influencerCommissionRate: baseInputs.influencerCommissionRate,
-          influencerChannels: baseInputs.influencerChannels || ['TY'],
-          includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
         }),
         [field]: value,
       },
     }));
   };
 
-  const handleToggleInfluencerChannel = (category: string, channelKey: ChannelKey) => {
-    const currentRate = categoryRates[category] || {
-      category,
-      targetProfitRate: baseInputs.targetProfitRate,
-      sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
-      discountRate: baseInputs.discountRate,
-      influencerCommissionRate: baseInputs.influencerCommissionRate,
-      influencerChannels: baseInputs.influencerChannels || ['TY'],
-      includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
-    };
-    const currentChannels = currentRate.influencerChannels || [];
-    if (currentChannels.includes(channelKey)) {
-      handleRateChange(category, 'influencerChannels', currentChannels.filter(k => k !== channelKey));
+  const handleToggleBulkInfluencerChannel = (channelKey: ChannelKey) => {
+    if (bulkInfluencerChannels.includes(channelKey)) {
+      setBulkInfluencerChannels(bulkInfluencerChannels.filter(k => k !== channelKey));
     } else {
-      handleRateChange(category, 'influencerChannels', [...currentChannels, channelKey]);
+      setBulkInfluencerChannels([...bulkInfluencerChannels, channelKey]);
     }
   };
 
@@ -212,8 +199,6 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
         discountRate: baseInputs.discountRate,
         influencerCommissionRate: baseInputs.influencerCommissionRate,
-        influencerChannels: baseInputs.influencerChannels || ['TY'],
-        includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
       };
 
       const inputs: CalculationInputs = {
@@ -225,9 +210,9 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         sabitFiyatTargetProfitRate: catRate.sabitFiyatTargetProfitRate,
         discountRate: catRate.discountRate,
         influencerCommissionRate: catRate.influencerCommissionRate,
-        // Kategori bazlı influencer ayarları
-        influencerChannels: catRate.influencerChannels || ['TY'],
-        includeInfluencerInProfit: catRate.includeInfluencerInProfit ?? false,
+        // Genel influencer ayarları (tüm kategorilere uygulanır)
+        influencerChannels: bulkInfluencerChannels,
+        includeInfluencerInProfit: bulkIncludeInfluencerInProfit,
       };
 
       const res = calculateAllChannels(inputs, settings, CHANNELS.map(c => c.key));
@@ -322,106 +307,78 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                     sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
                     discountRate: baseInputs.discountRate,
                     influencerCommissionRate: baseInputs.influencerCommissionRate,
-                    influencerChannels: baseInputs.influencerChannels || ['TY'],
-                    includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
                   };
-                  const isExpanded = expandedCategories.has(cat);
                   return (
-                    <div key={cat}>
-                      <div className="grid grid-cols-5 gap-4 px-4 py-3 items-center bg-white hover:bg-slate-50">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              const newExpanded = new Set(expandedCategories);
-                              if (isExpanded) {
-                                newExpanded.delete(cat);
-                              } else {
-                                newExpanded.add(cat);
-                              }
-                              setExpandedCategories(newExpanded);
-                            }}
-                            className="text-slate-400 hover:text-slate-600 transition-colors"
-                          >
-                            <svg className={`h-4 w-4 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                          <div className="text-sm font-semibold text-slate-800 truncate">{cat}</div>
-                        </div>
-                        <input
-                          type="number"
-                          value={rate.targetProfitRate}
-                          onChange={(e) => handleRateChange(cat, 'targetProfitRate', parseFloat(e.target.value) || 0)}
-                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
-                        />
-                        <input
-                          type="number"
-                          value={rate.sabitFiyatTargetProfitRate}
-                          onChange={(e) => handleRateChange(cat, 'sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
-                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
-                        />
-                        <input
-                          type="number"
-                          value={rate.discountRate}
-                          onChange={(e) => handleRateChange(cat, 'discountRate', parseFloat(e.target.value) || 0)}
-                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
-                        />
-                        <input
-                          type="number"
-                          value={rate.influencerCommissionRate}
-                          onChange={(e) => handleRateChange(cat, 'influencerCommissionRate', parseFloat(e.target.value) || 0)}
-                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
-                        />
-                      </div>
-                      {isExpanded && (
-                        <div className="bg-slate-50 px-4 py-4 border-t border-slate-200">
-                          <div className="space-y-4">
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-2">Influencer Komisyonu Uygulanacak Kanallar</label>
-                              <div className="flex flex-wrap gap-4">
-                                {CHANNELS.map(channel => (
-                                  <label key={channel.key} className="flex items-center space-x-2 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={(rate.influencerChannels || []).includes(channel.key)}
-                                      onChange={() => handleToggleInfluencerChannel(cat, channel.key)}
-                                      className="h-4 w-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500"
-                                    />
-                                    <span className="text-sm text-slate-700">{channel.label}</span>
-                                  </label>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex items-center">
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked={rate.includeInfluencerInProfit}
-                                onClick={() => handleRateChange(cat, 'includeInfluencerInProfit', !rate.includeInfluencerInProfit)}
-                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
-                                  rate.includeInfluencerInProfit ? 'bg-brand-600' : 'bg-slate-200'
-                                }`}
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                    rate.includeInfluencerInProfit ? 'translate-x-5' : 'translate-x-0'
-                                  }`}
-                                />
-                              </button>
-                              <span 
-                                className="ml-3 text-sm text-slate-900 cursor-pointer select-none"
-                                onClick={() => handleRateChange(cat, 'includeInfluencerInProfit', !rate.includeInfluencerInProfit)}
-                              >
-                                Kar Hesaplaması Influencer Komisyonu Dahil
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                    <div key={cat} className="grid grid-cols-5 gap-4 px-4 py-3 items-center bg-white hover:bg-slate-50">
+                      <div className="text-sm font-semibold text-slate-800 truncate">{cat}</div>
+                      <input
+                        type="number"
+                        value={rate.targetProfitRate}
+                        onChange={(e) => handleRateChange(cat, 'targetProfitRate', parseFloat(e.target.value) || 0)}
+                        className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                      />
+                      <input
+                        type="number"
+                        value={rate.sabitFiyatTargetProfitRate}
+                        onChange={(e) => handleRateChange(cat, 'sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
+                        className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                      />
+                      <input
+                        type="number"
+                        value={rate.discountRate}
+                        onChange={(e) => handleRateChange(cat, 'discountRate', parseFloat(e.target.value) || 0)}
+                        className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                      />
+                      <input
+                        type="number"
+                        value={rate.influencerCommissionRate}
+                        onChange={(e) => handleRateChange(cat, 'influencerCommissionRate', parseFloat(e.target.value) || 0)}
+                        className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                      />
                     </div>
                   );
                 })}
+              </div>
+            </div>
+            <div className="mt-6 pt-6 border-t border-slate-200 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Influencer Komisyonu Uygulanacak Kanallar (Tüm Kategoriler İçin)</label>
+                  <div className="flex flex-wrap gap-4">
+                    {CHANNELS.map(channel => (
+                      <label key={channel.key} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bulkInfluencerChannels.includes(channel.key)}
+                          onChange={() => handleToggleBulkInfluencerChannel(channel.key)}
+                          className="h-4 w-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500"
+                        />
+                        <span className="text-sm text-slate-700">{channel.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={bulkIncludeInfluencerInProfit}
+                    onClick={() => setBulkIncludeInfluencerInProfit(!bulkIncludeInfluencerInProfit)}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+                      bulkIncludeInfluencerInProfit ? 'bg-brand-600' : 'bg-slate-200'
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        bulkIncludeInfluencerInProfit ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <span className="ml-3 text-sm text-slate-900">
+                    Kar Hesaplaması Influencer Komisyonu Dahil
+                  </span>
+                </div>
               </div>
             </div>
           </div>
