@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CalculationInputs } from '../types';
+import { CalculationInputs, CHANNELS, ChannelKey } from '../types';
 
 interface CalculatorProps {
   inputs: CalculationInputs;
@@ -12,6 +12,15 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
 
   const handleChange = (field: keyof CalculationInputs, value: any) => {
     onChange({ ...inputs, [field]: value });
+  };
+
+  const handleToggleInfluencerChannel = (channelKey: ChannelKey) => {
+    const currentChannels = inputs.influencerChannels || [];
+    if (currentChannels.includes(channelKey)) {
+      handleChange('influencerChannels', currentChannels.filter(k => k !== channelKey));
+    } else {
+      handleChange('influencerChannels', [...currentChannels, channelKey]);
+    }
   };
 
   // Number input için özel handler - sıfır başlarını ve boş değerleri düzgün handle eder
@@ -122,7 +131,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Sabit Fiyat Target Profit */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Sabit Fiyat Hedef Kâr Oranı</label>
@@ -139,11 +148,48 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
             </div>
           </div>
         </div>
+
+        {/* Discount (Optional) */}
+        <div>
+           <label className="block text-sm font-medium text-slate-700 mb-2">Kampanya/İndirim Oranı (Opsiyonel)</label>
+            <div className="relative rounded-lg shadow-sm">
+            <input
+              type="number"
+              min="0"
+              max="99"
+              step="0.1"
+              placeholder="0"
+              value={inputs.discountRate === 0 ? '' : inputs.discountRate}
+              onChange={(e) => handleNumberChange('discountRate', e)}
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all placeholder:text-slate-400"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <span className="text-slate-500 sm:text-sm">%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Influencer Commission */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Influencer Komisyonu</label>
+          <div className="relative rounded-lg shadow-sm">
+            <input
+              type="number"
+              step="0.1"
+              value={inputs.influencerCommissionRate === 0 ? '' : inputs.influencerCommissionRate}
+              onChange={(e) => handleNumberChange('influencerCommissionRate', e)}
+              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <span className="text-slate-500 sm:text-sm">%</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-end">
         {/* Profit Type */}
-        <div>
+        <div className="md:col-span-2 lg:col-span-2">
           <label className="block text-sm font-medium text-slate-700 mb-2">Kâr Hesaplama Tipi</label>
           <select
             value={inputs.profitType}
@@ -180,27 +226,50 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
                 Firma Genel Gideri Dahil Et
             </span>
         </div>
+      </div>
 
-        {/* Discount (Optional) */}
-        <div>
-           <label className="block text-sm font-medium text-slate-700 mb-2">Kampanya/İndirim Oranı (Opsiyonel)</label>
-            <div className="relative rounded-lg shadow-sm">
-            <input
-              type="number"
-              min="0"
-              max="99"
-              step="0.1"
-              placeholder="0"
-              value={inputs.discountRate === 0 ? '' : inputs.discountRate}
-              onChange={(e) => handleNumberChange('discountRate', e)}
-              className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all placeholder:text-slate-400"
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              <span className="text-slate-500 sm:text-sm">%</span>
-            </div>
-          </div>
+      {/* Influencer Channel Selection */}
+      <div className="mt-6 pt-6 border-t border-slate-200">
+        <label className="block text-sm font-medium text-slate-700 mb-3">Influencer Komisyonu Uygulanacak Kanallar</label>
+        <div className="flex flex-wrap gap-4">
+          {CHANNELS.map(channel => (
+            <label key={channel.key} className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={(inputs.influencerChannels || []).includes(channel.key)}
+                onChange={() => handleToggleInfluencerChannel(channel.key)}
+                className="h-4 w-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500"
+              />
+              <span className="text-sm text-slate-700">{channel.label}</span>
+            </label>
+          ))}
         </div>
+      </div>
 
+      {/* Include Influencer in Profit Calculation */}
+      <div className="mt-6 flex items-center">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={inputs.includeInfluencerInProfit}
+          onClick={() => handleChange('includeInfluencerInProfit', !inputs.includeInfluencerInProfit)}
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+            inputs.includeInfluencerInProfit ? 'bg-brand-600' : 'bg-slate-200'
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              inputs.includeInfluencerInProfit ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </button>
+        <span 
+          className="ml-3 text-sm text-slate-900 cursor-pointer select-none"
+          onClick={() => handleChange('includeInfluencerInProfit', !inputs.includeInfluencerInProfit)}
+        >
+          Kar Hesaplaması Influencer Komisyonu Dahil
+        </span>
       </div>
 
       {/* Model Code and Save Section */}

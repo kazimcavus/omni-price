@@ -173,7 +173,20 @@ export const calculateAllChannels = (
     }
 
     // Rounding
-    const finalSalePrice = error ? 0 : roundPrice(rawPrice);
+    let baseSalePrice = error ? 0 : roundPrice(rawPrice);
+    let finalSalePrice = baseSalePrice;
+
+    // Apply Influencer Commission (only to selected channels)
+    let influencerCommissionAmount = 0;
+    const influencerChannels = inputs.influencerChannels || [];
+    if (!error && inputs.influencerCommissionRate > 0 && influencerChannels.includes(ch.key)) {
+      // Calculate influencer commission amount from base price (before rounding)
+      influencerCommissionAmount = baseSalePrice * (inputs.influencerCommissionRate / 100);
+      // Apply influencer commission to price
+      finalSalePrice = baseSalePrice * (1 + inputs.influencerCommissionRate / 100);
+      // Round again after influencer commission
+      finalSalePrice = roundPrice(finalSalePrice);
+    }
 
     // Discount Calculation
     let finalListPrice: number | null = null;
@@ -188,7 +201,14 @@ export const calculateAllChannels = (
     // Breakdown Calculation based on Final Price
     const commissionAmount = finalSalePrice * commDecimal;
     const netAfterCommission = finalSalePrice - commissionAmount;
-    const netProfit = finalSalePrice - commissionAmount - fixedCosts;
+    
+    // Calculate net profit: if includeInfluencerInProfit is true, subtract influencer commission from profit
+    let netProfit: number;
+    if (inputs.includeInfluencerInProfit && influencerCommissionAmount > 0) {
+      netProfit = finalSalePrice - commissionAmount - influencerCommissionAmount - fixedCosts;
+    } else {
+      netProfit = finalSalePrice - commissionAmount - fixedCosts;
+    }
     
     let calculatedProfitRate = 0;
     if (!error && finalSalePrice > 0) {
@@ -220,6 +240,7 @@ export const calculateAllChannels = (
         productCostTotal: productCost,
         platformFee: currentPlatformFee,
         invoiceCost: currentInvoice,
+        influencerCommissionAmount,
       },
       error
     });

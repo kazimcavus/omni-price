@@ -156,6 +156,12 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onCopy }) => {
                         <span className="font-mono text-red-600">{formatCurrency(result.breakdown.platformFee)}</span>
                     </div>
                 )}
+                {result.breakdown.influencerCommissionAmount > 0 && (
+                    <div className="flex justify-between py-1 border-b border-slate-200">
+                        <span className="text-slate-600">Influencer Komisyonu</span>
+                        <span className="font-mono text-purple-600">{formatCurrency(result.breakdown.influencerCommissionAmount)}</span>
+                    </div>
+                )}
                 <div className="flex justify-between py-1">
                     <span className="text-slate-600">e-Fatura</span>
                     <span className="font-mono">{formatCurrency(result.breakdown.invoiceCost)}</span>

@@ -8,6 +8,7 @@ import {
   CategoryRate,
   BulkResultItem,
   CHANNELS,
+  ChannelKey,
 } from '../types';
 import { calculateAllChannels } from '../utils/math';
 import { exportBulkToExcel } from '../utils/export';
@@ -53,6 +54,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
   const [warnings, setWarnings] = useState<string[]>([]);
   const [showSaveChoice, setShowSaveChoice] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // Load persisted state
   useEffect(() => {
@@ -140,6 +142,9 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
             targetProfitRate: baseInputs.targetProfitRate,
             sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
             discountRate: baseInputs.discountRate,
+            influencerCommissionRate: baseInputs.influencerCommissionRate,
+            influencerChannels: baseInputs.influencerChannels || ['TY'],
+            includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
           };
         }
       });
@@ -158,7 +163,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
     }
   };
 
-  const handleRateChange = (category: string, field: keyof CategoryRate, value: number) => {
+  const handleRateChange = (category: string, field: keyof CategoryRate, value: number | ChannelKey[] | boolean) => {
     setCategoryRates(prev => ({
       ...prev,
       [category]: {
@@ -167,10 +172,31 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
           targetProfitRate: baseInputs.targetProfitRate,
           sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
           discountRate: baseInputs.discountRate,
+          influencerCommissionRate: baseInputs.influencerCommissionRate,
+          influencerChannels: baseInputs.influencerChannels || ['TY'],
+          includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
         }),
         [field]: value,
       },
     }));
+  };
+
+  const handleToggleInfluencerChannel = (category: string, channelKey: ChannelKey) => {
+    const currentRate = categoryRates[category] || {
+      category,
+      targetProfitRate: baseInputs.targetProfitRate,
+      sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
+      discountRate: baseInputs.discountRate,
+      influencerCommissionRate: baseInputs.influencerCommissionRate,
+      influencerChannels: baseInputs.influencerChannels || ['TY'],
+      includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
+    };
+    const currentChannels = currentRate.influencerChannels || [];
+    if (currentChannels.includes(channelKey)) {
+      handleRateChange(category, 'influencerChannels', currentChannels.filter(k => k !== channelKey));
+    } else {
+      handleRateChange(category, 'influencerChannels', [...currentChannels, channelKey]);
+    }
   };
 
   const handleCompute = () => {
@@ -185,6 +211,9 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         targetProfitRate: baseInputs.targetProfitRate,
         sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
         discountRate: baseInputs.discountRate,
+        influencerCommissionRate: baseInputs.influencerCommissionRate,
+        influencerChannels: baseInputs.influencerChannels || ['TY'],
+        includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
       };
 
       const inputs: CalculationInputs = {
@@ -195,6 +224,10 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         targetProfitRate: catRate.targetProfitRate,
         sabitFiyatTargetProfitRate: catRate.sabitFiyatTargetProfitRate,
         discountRate: catRate.discountRate,
+        influencerCommissionRate: catRate.influencerCommissionRate,
+        // Kategori bazlı influencer ayarları
+        influencerChannels: catRate.influencerChannels || ['TY'],
+        includeInfluencerInProfit: catRate.includeInfluencerInProfit ?? false,
       };
 
       const res = calculateAllChannels(inputs, settings, CHANNELS.map(c => c.key));
@@ -271,14 +304,15 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         return (
           <div className="space-y-4">
             <p className="text-sm text-slate-600">
-              Kategorilere özel Hedef Kâr, Sabit Fiyat Hedef Kâr ve İndirim oranlarını girin.
+              Kategorilere özel Hedef Kâr, Sabit Fiyat Hedef Kâr, İndirim ve Influencer Komisyon oranlarını girin.
             </p>
             <div className="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
-              <div className="grid grid-cols-4 gap-4 bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
+              <div className="grid grid-cols-5 gap-4 bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
                 <div>Kategori</div>
                 <div>Hedef Kâr Oranı (%)</div>
                 <div>Sabit Fiyat Hedef Kâr Oranı (%)</div>
                 <div>Kampanya/İndirim Oranı (%)</div>
+                <div>Influencer Komisyonu (%)</div>
               </div>
               <div className="divide-y divide-slate-100">
                 {uniqueCategories.map(cat => {
@@ -287,28 +321,104 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                     targetProfitRate: baseInputs.targetProfitRate,
                     sabitFiyatTargetProfitRate: baseInputs.sabitFiyatTargetProfitRate,
                     discountRate: baseInputs.discountRate,
+                    influencerCommissionRate: baseInputs.influencerCommissionRate,
+                    influencerChannels: baseInputs.influencerChannels || ['TY'],
+                    includeInfluencerInProfit: baseInputs.includeInfluencerInProfit ?? false,
                   };
+                  const isExpanded = expandedCategories.has(cat);
                   return (
-                    <div key={cat} className="grid grid-cols-4 gap-4 px-4 py-3 items-center bg-white hover:bg-slate-50">
-                      <div className="text-sm font-semibold text-slate-800 truncate">{cat}</div>
-                      <input
-                        type="number"
-                        value={rate.targetProfitRate}
-                        onChange={(e) => handleRateChange(cat, 'targetProfitRate', parseFloat(e.target.value) || 0)}
-                        className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
-                      />
-                      <input
-                        type="number"
-                        value={rate.sabitFiyatTargetProfitRate}
-                        onChange={(e) => handleRateChange(cat, 'sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
-                        className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
-                      />
-                      <input
-                        type="number"
-                        value={rate.discountRate}
-                        onChange={(e) => handleRateChange(cat, 'discountRate', parseFloat(e.target.value) || 0)}
-                        className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
-                      />
+                    <div key={cat}>
+                      <div className="grid grid-cols-5 gap-4 px-4 py-3 items-center bg-white hover:bg-slate-50">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const newExpanded = new Set(expandedCategories);
+                              if (isExpanded) {
+                                newExpanded.delete(cat);
+                              } else {
+                                newExpanded.add(cat);
+                              }
+                              setExpandedCategories(newExpanded);
+                            }}
+                            className="text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            <svg className={`h-4 w-4 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                          <div className="text-sm font-semibold text-slate-800 truncate">{cat}</div>
+                        </div>
+                        <input
+                          type="number"
+                          value={rate.targetProfitRate}
+                          onChange={(e) => handleRateChange(cat, 'targetProfitRate', parseFloat(e.target.value) || 0)}
+                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                        />
+                        <input
+                          type="number"
+                          value={rate.sabitFiyatTargetProfitRate}
+                          onChange={(e) => handleRateChange(cat, 'sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
+                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                        />
+                        <input
+                          type="number"
+                          value={rate.discountRate}
+                          onChange={(e) => handleRateChange(cat, 'discountRate', parseFloat(e.target.value) || 0)}
+                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                        />
+                        <input
+                          type="number"
+                          value={rate.influencerCommissionRate}
+                          onChange={(e) => handleRateChange(cat, 'influencerCommissionRate', parseFloat(e.target.value) || 0)}
+                          className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
+                        />
+                      </div>
+                      {isExpanded && (
+                        <div className="bg-slate-50 px-4 py-4 border-t border-slate-200">
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">Influencer Komisyonu Uygulanacak Kanallar</label>
+                              <div className="flex flex-wrap gap-4">
+                                {CHANNELS.map(channel => (
+                                  <label key={channel.key} className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={(rate.influencerChannels || []).includes(channel.key)}
+                                      onChange={() => handleToggleInfluencerChannel(cat, channel.key)}
+                                      className="h-4 w-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500"
+                                    />
+                                    <span className="text-sm text-slate-700">{channel.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex items-center">
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={rate.includeInfluencerInProfit}
+                                onClick={() => handleRateChange(cat, 'includeInfluencerInProfit', !rate.includeInfluencerInProfit)}
+                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+                                  rate.includeInfluencerInProfit ? 'bg-brand-600' : 'bg-slate-200'
+                                }`}
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                    rate.includeInfluencerInProfit ? 'translate-x-5' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
+                              <span 
+                                className="ml-3 text-sm text-slate-900 cursor-pointer select-none"
+                                onClick={() => handleRateChange(cat, 'includeInfluencerInProfit', !rate.includeInfluencerInProfit)}
+                              >
+                                Kar Hesaplaması Influencer Komisyonu Dahil
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -361,9 +471,17 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                     <th className="px-3 py-2 text-right">KDV %</th>
                     <th className="px-3 py-2 text-right">İndirim %</th>
                     {CHANNELS.map(ch => (
-                      <th key={ch.key} className="px-3 py-2 text-right whitespace-nowrap">
-                        {ch.label} Satış
-                      </th>
+                      <React.Fragment key={ch.key}>
+                        <th className="px-3 py-2 text-right whitespace-nowrap">
+                          {ch.label} Satış
+                        </th>
+                        <th className="px-3 py-2 text-right whitespace-nowrap">
+                          {ch.label} Net Kâr
+                        </th>
+                        <th className="px-3 py-2 text-right whitespace-nowrap">
+                          {ch.label} Kâr %
+                        </th>
+                      </React.Fragment>
                     ))}
                   </tr>
                 </thead>
@@ -379,9 +497,17 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                       {CHANNELS.map(ch => {
                         const res = item.results.find(r => r.channelKey === ch.key && !r.error);
                         return (
-                          <td key={ch.key} className="px-3 py-2 text-right font-semibold text-slate-800">
-                            {res ? res.salePrice.toFixed(2).replace('.', ',') : '-'}
-                          </td>
+                          <React.Fragment key={ch.key}>
+                            <td className="px-3 py-2 text-right font-semibold text-slate-800">
+                              {res ? res.salePrice.toFixed(2).replace('.', ',') : '-'}
+                            </td>
+                            <td className="px-3 py-2 text-right text-emerald-700">
+                              {res ? res.netProfit.toFixed(2).replace('.', ',') : '-'}
+                            </td>
+                            <td className="px-3 py-2 text-right text-blue-700">
+                              {res ? `%${res.profitRate.toFixed(2)}` : '-'}
+                            </td>
+                          </React.Fragment>
                         );
                       })}
                     </tr>

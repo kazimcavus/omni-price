@@ -31,15 +31,21 @@ const App: React.FC = () => {
       sabitFiyatTargetProfitRate: 20,
       profitType: 'MARGIN' as const,
       includeOverhead: true,
-      discountRate: 0
+      discountRate: 0,
+      influencerCommissionRate: 15,
+      influencerChannels: ['TY'] as ChannelKey[], // Varsayılan: sadece Trendyol
+      includeInfluencerInProfit: false // Varsayılan: hariç
     };
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Eski localStorage verilerinde sabitFiyatTargetProfitRate olmayabilir
+      // Eski localStorage verilerinde yeni alanlar olmayabilir
       return {
         ...defaultInputs,
         ...parsed,
-        sabitFiyatTargetProfitRate: parsed.sabitFiyatTargetProfitRate ?? defaultInputs.sabitFiyatTargetProfitRate
+        sabitFiyatTargetProfitRate: parsed.sabitFiyatTargetProfitRate ?? defaultInputs.sabitFiyatTargetProfitRate,
+        influencerCommissionRate: parsed.influencerCommissionRate ?? defaultInputs.influencerCommissionRate,
+        influencerChannels: parsed.influencerChannels ?? defaultInputs.influencerChannels,
+        includeInfluencerInProfit: parsed.includeInfluencerInProfit ?? defaultInputs.includeInfluencerInProfit
       };
     }
     return defaultInputs;

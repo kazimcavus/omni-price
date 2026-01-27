@@ -21,6 +21,9 @@ export interface CalculationInputs {
   profitType: ProfitType;
   includeOverhead: boolean;
   discountRate: number; // Optional
+  influencerCommissionRate: number; // Influencer komisyonu
+  influencerChannels: ChannelKey[]; // Influencer komisyonu hangi kanallara uygulanacak
+  includeInfluencerInProfit: boolean; // Kar hesaplamasında influencer komisyonu dahil/hariç
 }
 
 // Bulk upload types
@@ -37,6 +40,9 @@ export interface CategoryRate {
   targetProfitRate: number;
   sabitFiyatTargetProfitRate: number;
   discountRate: number;
+  influencerCommissionRate: number;
+  influencerChannels: ChannelKey[];
+  includeInfluencerInProfit: boolean;
 }
 
 export type CategoryRateMap = Record<string, CategoryRate>;
@@ -78,6 +84,7 @@ export interface ChannelResult {
     productCostTotal: number; // Including overhead if selected
     platformFee: number;
     invoiceCost: number;
+    influencerCommissionAmount: number; // Influencer komisyonu tutarı
   };
   error?: string;
 }
