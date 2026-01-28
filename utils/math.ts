@@ -180,12 +180,12 @@ export const calculateAllChannels = (
     let influencerCommissionAmount = 0;
     const influencerChannels = inputs.influencerChannels || [];
     if (!error && inputs.influencerCommissionRate > 0 && influencerChannels.includes(ch.key)) {
-      // Calculate influencer commission amount from base price (before rounding)
-      influencerCommissionAmount = baseSalePrice * (inputs.influencerCommissionRate / 100);
-      // Apply influencer commission to price
+      // Apply influencer commission to price first
       finalSalePrice = baseSalePrice * (1 + inputs.influencerCommissionRate / 100);
-      // Round again after influencer commission
+      // Round after influencer commission
       finalSalePrice = roundPrice(finalSalePrice);
+      // Calculate influencer commission amount from final price (after rounding)
+      influencerCommissionAmount = finalSalePrice * (inputs.influencerCommissionRate / 100);
     }
 
     // Discount Calculation
