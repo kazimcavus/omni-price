@@ -248,3 +248,93 @@ export const calculateAllChannels = (
 
   return results;
 };
+
+// --- Trendyol Komisyon Tarifeleri: TY giderleri ile hesaplama (indirim/influencer yok) ---
+
+function getTrendyolFixedCosts(inputs: CalculationInputs, settings: CostSetting[]): number {
+  const getSetting = (key: string) => settings.find(s => s.key === key)!;
+  const r = inputs.returnRate / 100;
+
+  let productCost = inputs.productCostExKdv * (1 + inputs.productKdvRate / 100);
+  if (inputs.includeOverhead) {
+    const fgRate = getSetting('fgRate').value;
+    productCost = productCost * (1 + fgRate / 100);
+  }
+
+  const boxS = getSetting('box');
+  const cardS = getSetting('card');
+  const bagS = getSetting('bag');
+  const tapeS = getSetting('tape');
+  const boxKD = toKdvDahil(boxS.value, boxS.kdvMode, boxS.kdvRate);
+  const cardKD = toKdvDahil(cardS.value, cardS.kdvMode, cardS.kdvRate);
+  const bagKD = toKdvDahil(bagS.value, bagS.kdvMode, bagS.kdvRate);
+  const tapeKD = toKdvDahil(tapeS.value, tapeS.kdvMode, tapeS.kdvRate);
+  const packTotal = boxKD + cardKD + bagKD + tapeKD;
+  const packExpected = r >= 1 ? 999999 : packTotal / (1 - r);
+
+  const invMpS = getSetting('invoiceMp');
+  const invoiceMarketplace = toKdvDahil(invMpS.value, invMpS.kdvMode, invMpS.kdvRate);
+  const platS = getSetting('platformFee');
+  const platformFeeVal = toKdvDahil(platS.value, platS.kdvMode, platS.kdvRate);
+
+  const shipVal = getSetting('marketplaceShip');
+  const retShipVal = getSetting('marketplaceRetShip');
+  const shipCost = toKdvDahil(shipVal.value, shipVal.kdvMode, shipVal.kdvRate);
+  const retCost = toKdvDahil(retShipVal.value, retShipVal.kdvMode, retShipVal.kdvRate);
+  const shipExpMarketplace = r >= 1 ? 999999 : (shipCost + retCost * r) / (1 - r);
+
+  return shipExpMarketplace + productCost + packExpected + invoiceMarketplace + platformFeeVal;
+}
+
+export interface ProfitForPriceResult {
+  netProfit: number;
+  profitRate: number;
+  fixedCosts: number;
+  commissionAmount: number;
+}
+
+export function calculateProfitForGivenPriceAndCommission(
+  inputs: CalculationInputs,
+  settings: CostSetting[],
+  salePrice: number,
+  commissionRate: number
+): ProfitForPriceResult {
+  const fixedCosts = getTrendyolFixedCosts(inputs, settings);
+  const commissionAmount = salePrice * (commissionRate / 100);
+  const netProfit = salePrice - commissionAmount - fixedCosts;
+  const profitRate =
+    inputs.profitType === 'MARGIN'
+      ? (salePrice > 0 ? (netProfit / salePrice) * 100 : 0)
+      : (netProfit / fixedCosts) * 100;
+  return { netProfit, profitRate, fixedCosts, commissionAmount };
+}
+
+export interface PriceForTargetResult {
+  price: number;
+  error?: string;
+}
+
+export function calculatePriceForTargetProfit(
+  inputs: CalculationInputs,
+  settings: CostSetting[],
+  commissionRate: number,
+  targetProfitRate: number
+): PriceForTargetResult {
+  const fixedCosts = getTrendyolFixedCosts(inputs, settings);
+  const commDecimal = commissionRate / 100;
+  const target = targetProfitRate / 100;
+
+  if (inputs.profitType === 'MARGIN') {
+    const denominator = (1 - commDecimal) - target;
+    if (denominator <= 0) {
+      return { price: 0, error: 'Hedef kâr bu komisyon oranıyla imkansız.' };
+    }
+    return { price: fixedCosts / denominator };
+  } else {
+    const targetNet = fixedCosts * (1 + target);
+    if (commDecimal >= 1) {
+      return { price: 0, error: 'Komisyon %100 veya daha fazla olamaz.' };
+    }
+    return { price: targetNet / (1 - commDecimal) };
+  }
+}

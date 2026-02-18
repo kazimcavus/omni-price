@@ -102,3 +102,33 @@ export interface SavedPriceItem {
   discountRate: number;
   results: ChannelResult[];
 }
+
+// Trendyol Komisyon Tarifeleri (4 teklif: aralık + komisyon)
+export interface TrendyolOffer {
+  priceLower: number;
+  priceUpper: number;
+  commissionRate: number;
+}
+
+export interface KomisyonTeklifRow {
+  sellerStockCode: string;
+  modelCode: string;
+  category: string; // Trendyol KATEGORİ (F)
+  categorizasyon?: string; // Opsiyonel; hedef kâr buna göre verilir (örn. ANEW-20)
+  cost: number;
+  returnRate: number;
+  kdvRate: number;
+  offers: TrendyolOffer[];
+}
+
+export interface KomisyonTeklifResultItem {
+  sellerStockCode: string;
+  modelCode: string;
+  category: string;
+  targetProfitRate: number;
+  acceptedOfferIndex: number | null;
+  acceptedPrice: number | null;
+  acceptedCommissionRate: number | null;
+  netProfit: number | null;
+  profitRate: number | null;
+}

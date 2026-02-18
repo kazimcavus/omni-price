@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { SavedPriceItem, CHANNELS, BulkResultItem } from '../types';
+import { SavedPriceItem, CHANNELS, BulkResultItem, KomisyonTeklifResultItem } from '../types';
 
 export const exportToExcel = (items: SavedPriceItem[]) => {
   if (items.length === 0) return;
@@ -146,4 +146,51 @@ export const exportBulkToExcel = (items: BulkResultItem[]) => {
   const fileName = `toplu_fiyatlar_${new Date().toISOString().split('T')[0]}.xlsx`;
   XLSX.writeFile(wb, fileName);
 };
+
+function findHeaderKey(keys: string[], name: string): string | undefined {
+  const u = name.trim().toUpperCase();
+  return keys.find(k => k.trim().toUpperCase() === u);
+}
+
+export function exportKomisyonTarifeToExcel(
+  originalSheetRows: Record<string, unknown>[],
+  results: KomisyonTeklifResultItem[],
+  _rows: { sellerStockCode: string }[]
+): void {
+  if (originalSheetRows.length === 0 || results.length === 0) return;
+
+  const keys = Object.keys(originalSheetRows[0] || {});
+  const stockKey = findHeaderKey(keys, 'SATICI STOK KODU') ?? 'SATICI STOK KODU';
+  const newTsFKey = findHeaderKey(keys, 'YENİ TSF (FİYAT GÜNCELLE)') ?? 'YENİ TSF (FİYAT GÜNCELLE)';
+  const komisyonKey = findHeaderKey(keys, 'HESAPLANAN KOMİSYON') ?? 'HESAPLANAN KOMİSYON';
+  const teklifKey = 'SEÇİLEN TEKLİF';
+
+  const resultMap = new Map(results.map(r => [r.sellerStockCode, r]));
+
+  let headersFinal = keys.includes(newTsFKey) ? [...keys] : [...keys, newTsFKey];
+  if (!headersFinal.includes(komisyonKey)) headersFinal.push(komisyonKey);
+  if (!headersFinal.includes(teklifKey)) headersFinal.push(teklifKey);
+
+  const rowsAoa: (string | number)[][] = [headersFinal];
+  originalSheetRows.forEach(row => {
+    const stockVal = String(row[stockKey] ?? '').trim();
+    const result = resultMap.get(stockVal);
+    const rowArr = headersFinal.map(h => {
+      if (h === newTsFKey)
+        return result?.acceptedPrice != null ? result.acceptedPrice : (row[h] as string | number) ?? '';
+      if (h === komisyonKey)
+        return result?.acceptedCommissionRate != null ? result.acceptedCommissionRate : (row[h] as string | number) ?? '';
+      if (h === teklifKey)
+        return result?.acceptedOfferIndex != null ? result.acceptedOfferIndex + 1 : '';
+      return (row[h] as string | number) ?? '';
+    });
+    rowsAoa.push(rowArr);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rowsAoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Komisyon Tarifeleri');
+  const fileName = `trendyol_komisyon_tarifeleri_${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}
 

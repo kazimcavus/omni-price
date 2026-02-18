@@ -9,6 +9,7 @@ import {
   BulkResultItem,
   CHANNELS,
   ChannelKey,
+  ProfitType,
 } from '../types';
 import { calculateAllChannels } from '../utils/math';
 import { exportBulkToExcel } from '../utils/export';
@@ -56,6 +57,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
   const [loading, setLoading] = useState(false);
   const [bulkInfluencerChannels, setBulkInfluencerChannels] = useState<ChannelKey[]>(baseInputs.influencerChannels || ['TY']);
   const [bulkIncludeInfluencerInProfit, setBulkIncludeInfluencerInProfit] = useState<boolean>(baseInputs.includeInfluencerInProfit ?? false);
+  const [profitType, setProfitType] = useState<ProfitType>('MARGIN');
 
   // Load persisted state
   useEffect(() => {
@@ -87,7 +89,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
     return Array.from(set);
   }, [rows]);
 
-  const handleFile = async (file: File) => {
+  const handleFile = async (file: File): Promise<boolean> => {
     setLoading(true);
     try {
       const buf = await file.arrayBuffer();
@@ -103,7 +105,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
       if (missingHeaders.length) {
         onToast(`Eksik kolonlar: ${missingHeaders.join(', ')}`);
         setLoading(false);
-        return;
+        return false;
       }
 
       const newWarnings: string[] = [];
@@ -131,7 +133,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         onToast('Geçerli satır bulunamadı.');
         setWarnings(newWarnings);
         setLoading(false);
-        return;
+        return false;
       }
 
       // Init category rates from base inputs
@@ -154,11 +156,13 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
       setResults([]);
       setStep(2);
       onToast('Dosya yüklendi, kategorileri kontrol edin.');
+      setLoading(false);
+      return true;
     } catch (e) {
       onToast('Dosya okunamadı.');
       console.error(e);
-    } finally {
       setLoading(false);
+      return false;
     }
   };
 
@@ -203,6 +207,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
 
       const inputs: CalculationInputs = {
         ...baseInputs,
+        profitType,
         productCostExKdv: row.cost,
         productKdvRate: row.kdvRate,
         returnRate: row.returnRate,
@@ -210,7 +215,6 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         sabitFiyatTargetProfitRate: catRate.sabitFiyatTargetProfitRate,
         discountRate: catRate.discountRate,
         influencerCommissionRate: catRate.influencerCommissionRate,
-        // Genel influencer ayarları (tüm kategorilere uygulanır)
         influencerChannels: bulkInfluencerChannels,
         includeInfluencerInProfit: bulkIncludeInfluencerInProfit,
       };
@@ -267,9 +271,12 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
             <input
               type="file"
               accept=".xlsx"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0];
-                if (file) handleFile(file);
+                if (file) {
+                  const ok = await handleFile(file);
+                  if (!ok) e.target.value = '';
+                }
               }}
               className="inline-block w-auto text-sm text-slate-700 cursor-pointer"
             />
@@ -340,8 +347,22 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                 })}
               </div>
             </div>
-            <div className="mt-6 pt-6 border-t border-slate-200 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-              <div className="space-y-4">
+            <div className="mt-6 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <h4 className="text-sm font-semibold text-slate-800 mb-4">Hesaplama Ayarları</h4>
+              <div className="space-y-5">
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Kâr Hesaplama Tipi</label>
+                    <select
+                      value={profitType}
+                      onChange={e => setProfitType(e.target.value as ProfitType)}
+                      className="block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 transition-all cursor-pointer"
+                    >
+                      <option value="MARGIN">Satış Fiyatından (Margin)</option>
+                      <option value="MARKUP">Maliyet Üzerine (Markup)</option>
+                    </select>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Influencer Komisyonu Uygulanacak Kanallar (Tüm Kategoriler İçin)</label>
                   <div className="flex flex-wrap gap-4">
@@ -506,6 +527,25 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
       </div>
 
       <div className="space-y-6">
+        {step > 1 && (
+          <div className="flex gap-3">
+            <button
+              onClick={() => setStep((prev) => (prev === 1 ? 1 : ((prev - 1) as Step)))}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-md text-sm hover:bg-slate-200"
+            >
+              Geri
+            </button>
+            {step === 2 && (
+              <button
+                onClick={handleCompute}
+                className="px-4 py-2 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700"
+              >
+                Hesapla
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="min-h-[140px]">{renderStepContent()}</div>
 
         <div className="flex gap-3">

@@ -11,10 +11,11 @@ import { DEFAULT_SETTINGS, STORAGE_KEY_SETTINGS, STORAGE_KEY_INPUTS, STORAGE_KEY
 import { calculateAllChannels } from './utils/math';
 import { exportToExcel } from './utils/export';
 import { BulkWizard } from './components/BulkWizard';
+import { TrendyolKomisyonTarifeWizard } from './components/TrendyolKomisyonTarifeWizard';
 
 const App: React.FC = () => {
   // --- State ---
-  const [activeTab, setActiveTab] = useState<'CALC' | 'BULK' | 'SETTINGS'>('CALC');
+  const [activeTab, setActiveTab] = useState<'CALC' | 'BULK' | 'KOMISYON_TARIFE' | 'SETTINGS'>('CALC');
   
   const [settings, setSettings] = useState<CostSetting[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
@@ -260,6 +261,16 @@ const App: React.FC = () => {
                 Liste Yükle
               </button>
               <button
+                onClick={() => setActiveTab('KOMISYON_TARIFE')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full transition-colors ${
+                  activeTab === 'KOMISYON_TARIFE'
+                    ? 'border-brand-500 text-slate-900'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                Trendyol Komisyon Tarifeleri
+              </button>
+              <button
                 onClick={() => setActiveTab('SETTINGS')}
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full transition-colors ${
                   activeTab === 'SETTINGS'
@@ -343,6 +354,16 @@ const App: React.FC = () => {
                 onClearAll={handleClearAll}
               />
             </div>
+          </div>
+        )}
+
+        {activeTab === 'KOMISYON_TARIFE' && (
+          <div className="max-w-7xl mx-auto">
+            <TrendyolKomisyonTarifeWizard
+              settings={settings}
+              baseInputs={inputs}
+              onToast={(msg) => setToastMsg(msg)}
+            />
           </div>
         )}
 
