@@ -531,7 +531,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
                       <div className="text-sm font-semibold text-slate-800 truncate">{cat}</div>
                       <input
                         type="number"
-                        value={rate.targetProfitRate}
+                        value={rate.targetProfitRate === 0 ? '' : rate.targetProfitRate}
                         onChange={e =>
                           handleRateChange(cat, 'targetProfitRate', parseFloat(e.target.value) || 0)
                         }

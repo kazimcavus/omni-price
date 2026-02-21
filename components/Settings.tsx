@@ -92,7 +92,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset })
                 <input
                   type="number"
                   step="0.01"
-                  value={item.value}
+                  value={item.value === 0 ? '' : item.value}
                   onChange={(e) => handleChange(item.key, 'value', parseFloat(e.target.value) || 0)}
                   className="block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm py-2 px-3 border bg-white text-slate-900 appearance-none transition-all"
                 />
@@ -117,7 +117,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset })
                     <input
                       type="number"
                       step="0.1"
-                      value={item.kdvRate}
+                      value={item.kdvRate === 0 ? '' : item.kdvRate}
                       onChange={(e) => handleChange(item.key, 'kdvRate', parseFloat(e.target.value) || 0)}
                       className="block w-full rounded-lg border-slate-300 text-xs py-2 px-2 border bg-white text-slate-900 appearance-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-all"
                     />
