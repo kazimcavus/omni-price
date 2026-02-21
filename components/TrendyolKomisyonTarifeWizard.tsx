@@ -54,14 +54,6 @@ const TRENDYOL_HEADERS = [
   'KDV Oranı',
 ] as const;
 
-/** Bazı dilim sütunları Excel'de olmayabilir; zorunlu değil. */
-const OPTIONAL_HEADERS = [
-  '1.Fiyat Alt Limiti', '1.Fiyat Üst Limiti',
-  '2.Fiyat Alt Limiti', '2.Fiyat Üst Limiti',
-  '3.Fiyat Alt Limiti', '3.Fiyat Üst Limiti',
-  '4.Fiyat Alt Limiti', '4.Fiyat Üst Limiti',
-];
-
 function normalizeHeaderForMatch(s: string): string {
   return s
     .trim()
@@ -391,22 +383,19 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
         );
 
         let priceToUse: number;
-        let priceSource: string;
         const effectiveLower = offer.priceLower > 0 ? offer.priceLower : 0;
 
         if (useAltLimitFallback) {
           // Checkbox açık: her zaman üst limiti kullan → en düşük komisyon, en yüksek fiyat, kâr hedefin üstünde
           priceToUse = offer.priceUpper;
-          priceSource = 'ustLimit';
         } else if (idealPrice >= effectiveLower && idealPrice <= offer.priceUpper) {
           // Checkbox kapalı: ideal fiyat aralığa sığıyor → tam hedef kâr
           priceToUse = idealPrice;
-          priceSource = 'ideal';
         } else {
           continue;
         }
 
-        const { profitRate, fixedCosts, commissionAmount, netProfit } = calculateProfitForGivenPriceAndCommission(
+        const { profitRate } = calculateProfitForGivenPriceAndCommission(
           inputs,
           settings,
           priceToUse,
