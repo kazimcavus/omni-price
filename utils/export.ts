@@ -47,17 +47,17 @@ export const exportToExcel = (items: SavedPriceItem[]) => {
         const result = getChannelResult(ch.key);
         const listPrice = result?.listPrice ?? null;
         const salePrice = result?.salePrice ?? null;
-        
+
         row.push(
-          listPrice !== null ? listPrice : '',
-          salePrice !== null ? salePrice : ''
+          listPrice !== null ? round2(listPrice) : '',
+          salePrice !== null ? round2(salePrice) : ''
         );
       });
     } else {
       CHANNELS.forEach(ch => {
         const result = getChannelResult(ch.key);
         const salePrice = result?.salePrice ?? null;
-        row.push(salePrice !== null ? salePrice : '');
+        row.push(salePrice !== null ? round2(salePrice) : '');
       });
     }
 
@@ -126,8 +126,8 @@ export const exportBulkToExcel = (items: BulkResultItem[]) => {
       const res = item.results.find(r => r.channelKey === ch.key && !r.error);
       const listPrice = res?.listPrice ?? null;
       const salePrice = res?.salePrice ?? null;
-      row.push(listPrice !== null ? listPrice : '');
-      row.push(salePrice !== null ? salePrice : '');
+      row.push(listPrice !== null ? round2(listPrice) : '');
+      row.push(salePrice !== null ? round2(salePrice) : '');
     });
 
     rows.push(row);
@@ -150,6 +150,11 @@ export const exportBulkToExcel = (items: BulkResultItem[]) => {
 function findHeaderKey(keys: string[], name: string): string | undefined {
   const u = name.trim().toUpperCase();
   return keys.find(k => k.trim().toUpperCase() === u);
+}
+
+/** Fiyat/komisyon için virgülden sonra 2 rakam (1 kuruş hassasiyeti) */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 export function exportKomisyonTarifeToExcel(
@@ -177,9 +182,9 @@ export function exportKomisyonTarifeToExcel(
     const result = resultMap.get(stockVal);
     const rowArr = headersFinal.map(h => {
       if (h === newTsFKey)
-        return result?.acceptedPrice != null ? result.acceptedPrice : (row[h] as string | number) ?? '';
+        return result?.acceptedPrice != null ? round2(result.acceptedPrice) : (row[h] as string | number) ?? '';
       if (h === komisyonKey)
-        return result?.acceptedCommissionRate != null ? result.acceptedCommissionRate : (row[h] as string | number) ?? '';
+        return result?.acceptedCommissionRate != null ? round2(result.acceptedCommissionRate) : (row[h] as string | number) ?? '';
       if (h === teklifKey)
         return result?.acceptedOfferIndex != null ? result.acceptedOfferIndex + 1 : '';
       return (row[h] as string | number) ?? '';
