@@ -44,13 +44,15 @@ export const calculateAllChannels = (
   const cardS = getSetting('card');
   const bagS = getSetting('bag');
   const tapeS = getSetting('tape');
+  const ambalajBagS = getSetting('ambalajBag');
 
   const boxKD = toKdvDahil(boxS.value, boxS.kdvMode, boxS.kdvRate);
   const cardKD = toKdvDahil(cardS.value, cardS.kdvMode, cardS.kdvRate);
   const bagKD = toKdvDahil(bagS.value, bagS.kdvMode, bagS.kdvRate);
   const tapeKD = toKdvDahil(tapeS.value, tapeS.kdvMode, tapeS.kdvRate);
+  const ambalajBagKD = toKdvDahil(ambalajBagS.value, ambalajBagS.kdvMode, ambalajBagS.kdvRate);
 
-  const packTotal = boxKD + cardKD + bagKD + tapeKD;
+  const packTotal = boxKD + cardKD + bagKD + tapeKD + ambalajBagKD;
   // packExpected = (pack * 100) / (100 - iadeOrani) = pack / (1 - r)
   const packExpected = r >= 1 ? 999999 : packTotal / (1 - r);
 
@@ -235,7 +237,8 @@ export const calculateAllChannels = (
           box: boxKD,
           card: cardKD,
           bag: bagKD,
-          tape: tapeKD
+          tape: tapeKD,
+          ambalajBag: ambalajBagKD
         },
         productCostTotal: productCost,
         platformFee: currentPlatformFee,
@@ -265,11 +268,13 @@ function getTrendyolFixedCosts(inputs: CalculationInputs, settings: CostSetting[
   const cardS = getSetting('card');
   const bagS = getSetting('bag');
   const tapeS = getSetting('tape');
+  const ambalajBagS = getSetting('ambalajBag');
   const boxKD = toKdvDahil(boxS.value, boxS.kdvMode, boxS.kdvRate);
   const cardKD = toKdvDahil(cardS.value, cardS.kdvMode, cardS.kdvRate);
   const bagKD = toKdvDahil(bagS.value, bagS.kdvMode, bagS.kdvRate);
   const tapeKD = toKdvDahil(tapeS.value, tapeS.kdvMode, tapeS.kdvRate);
-  const packTotal = boxKD + cardKD + bagKD + tapeKD;
+  const ambalajBagKD = toKdvDahil(ambalajBagS.value, ambalajBagS.kdvMode, ambalajBagS.kdvRate);
+  const packTotal = boxKD + cardKD + bagKD + tapeKD + ambalajBagKD;
   const packExpected = r >= 1 ? 999999 : packTotal / (1 - r);
 
   const invMpS = getSetting('invoiceMp');

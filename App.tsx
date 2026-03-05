@@ -19,7 +19,14 @@ const App: React.FC = () => {
   
   const [settings, setSettings] = useState<CostSetting[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    if (saved) {
+      const parsed: CostSetting[] = JSON.parse(saved);
+      return DEFAULT_SETTINGS.map(def => {
+        const found = parsed.find(p => p.key === def.key);
+        return found ? { ...def, ...found } : def;
+      });
+    }
+    return DEFAULT_SETTINGS;
   });
 
   const [inputs, setInputs] = useState<CalculationInputs>(() => {
@@ -229,17 +236,21 @@ const App: React.FC = () => {
       
       {/* Header */}
       <header className="bg-white shadow-sm z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-14 md:h-16">
+            <button
+              type="button"
+              onClick={() => setActiveTab('CALC')}
+              className="flex items-center hover:opacity-90 transition-opacity cursor-pointer min-h-[44px]"
+            >
               <div className="bg-brand-600 text-white p-1.5 rounded-lg shadow-sm">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 36v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
               </div>
               <h1 className="ml-3 text-xl font-bold text-slate-900 tracking-tight">OmniPrice</h1>
-            </div>
-            <nav className="flex space-x-4">
+            </button>
+            <nav className="hidden md:flex space-x-4">
               <button
                 onClick={() => setActiveTab('CALC')}
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full transition-colors ${
@@ -285,8 +296,51 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* Bottom Tab Bar (Mobile) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_6px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+        <div className="flex justify-around items-center h-16">
+          <button
+            onClick={() => setActiveTab('CALC')}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[44px] py-2 transition-colors ${activeTab === 'CALC' ? 'text-brand-600' : 'text-slate-500'}`}
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <span className="text-xs mt-0.5 font-medium">Hesaplama</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('BULK')}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[44px] py-2 transition-colors ${activeTab === 'BULK' ? 'text-brand-600' : 'text-slate-500'}`}
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span className="text-xs mt-0.5 font-medium">Liste Yükle</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('KOMISYON_TARIFE')}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[44px] py-2 transition-colors ${activeTab === 'KOMISYON_TARIFE' ? 'text-brand-600' : 'text-slate-500'}`}
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="text-xs mt-0.5 font-medium">Komisyon</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('SETTINGS')}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[44px] py-2 transition-colors ${activeTab === 'SETTINGS' ? 'text-brand-600' : 'text-slate-500'}`}
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-xs mt-0.5 font-medium">Ayarlar</span>
+          </button>
+        </div>
+      </nav>
+
       {/* Main Content */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 pb-20 md:pb-8">
         {activeTab === 'SETTINGS' && (
           <Settings 
             settings={settings} 
@@ -311,16 +365,20 @@ const App: React.FC = () => {
 
             {/* Mobile Sidebar */}
             <div className="lg:hidden mb-6 bg-white p-4 rounded-lg shadow-sm">
-                <div className="flex overflow-x-auto space-x-4 pb-2">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">Kanallar</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                    {CHANNELS.map(ch => (
-                      <label key={ch.key} className="flex items-center space-x-2 whitespace-nowrap">
+                      <label
+                        key={ch.key}
+                        className={`flex items-center min-h-[44px] px-3 py-2 rounded-lg border cursor-pointer transition-colors ${selectedChannels.includes(ch.key) ? 'border-brand-500 bg-brand-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                      >
                         <input
                           type="checkbox"
                           checked={selectedChannels.includes(ch.key)}
                           onChange={() => handleToggleChannel(ch.key)}
-                          className="h-4 w-4 text-brand-600 rounded"
+                          className="h-5 w-5 text-brand-600 rounded shrink-0 mr-2"
                         />
-                        <span className="text-sm">{ch.label}</span>
+                        <span className="text-sm font-medium">{ch.label}</span>
                       </label>
                    ))}
                 </div>
@@ -418,7 +476,7 @@ const App: React.FC = () => {
 
       {/* Toast Notification */}
       {toastMsg && (
-        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-3 z-50 animate-fade-in-up min-w-[280px] max-w-md">
+        <div className="fixed bottom-24 md:bottom-6 right-3 md:right-6 left-3 md:left-auto bg-slate-900 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-3 z-50 animate-fade-in-up min-w-0 max-w-md mx-auto md:mx-0">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

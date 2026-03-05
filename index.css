@@ -60,6 +60,17 @@ input[type=number] {
   @apply transition-colors duration-200;
 }
 
+/* Touch-friendly horizontal scroll (for tables on mobile) */
+.overflow-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 /* Keep scrollbar space to prevent layout shift between tabs */
 html {
   min-height: 100%;

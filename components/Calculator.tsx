@@ -46,7 +46,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 mb-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
         <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center">
           <svg className="w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -56,7 +56,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
         <h2 className="text-lg font-semibold text-slate-900">Ürün Maliyet Girişi</h2>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         
         {/* Cost */}
         <div>
@@ -131,7 +131,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {/* Sabit Fiyat Target Profit */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Sabit Fiyat Hedef Kâr Oranı</label>
@@ -187,7 +187,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-end">
+      <div className="mt-6 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-end">
         {/* Profit Type */}
         <div className="md:col-span-2 lg:col-span-2">
           <label className="block text-sm font-medium text-slate-700 mb-2">Kâr Hesaplama Tipi</label>

@@ -81,7 +81,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset })
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {localSettings.map((item) => (
             <div key={item.key} className="bg-gradient-to-br from-slate-50 to-white p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all">
               <label className="block text-sm font-medium text-slate-700 mb-3 truncate" title={item.label}>

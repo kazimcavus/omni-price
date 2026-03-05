@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
+import { parseExcelToJson } from '../utils/excel';
 import {
   CalculationInputs,
   CostSetting,
@@ -177,10 +177,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
     setLoading(true);
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
-      const sheetName = wb.SheetNames[0];
-      const ws = wb.Sheets[sheetName];
-      const json: Record<string, unknown>[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      const json = await parseExcelToJson(buf);
       const keys = Object.keys(json[0] || {});
 
       // "N.Fiyat Alt/Üst Limiti" — Excel bazen "Limit" yazıyor; findHeaderKey cache sorunlarına girmeden burada eşle
@@ -510,7 +507,8 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
               Hedef kâr verilecek gruba göre Hedef Kâr Oranı (%) girin. Grup: Kategorizasyon varsa Kategorizasyon, yoksa Trendyol Kategori.
             </p>
             <div className="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
+              <div className="overflow-x-auto overflow-touch overscroll-x-contain">
+              <div className="grid grid-cols-2 gap-4 min-w-[280px] bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
                 <div>Kategorizasyon / Kategori</div>
                 <div>Hedef Kâr Oranı (%)</div>
               </div>
@@ -541,8 +539,9 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
                   );
                 })}
               </div>
+              </div>
             </div>
-            <div className="mt-4 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="mt-4 bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
               <h4 className="text-sm font-semibold text-slate-800 mb-4">Hesaplama Ayarları</h4>
               <div className="space-y-4">
                 <div className="sm:w-1/2">
@@ -578,18 +577,18 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleExport}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
+                className="min-h-[44px] px-4 py-3 md:py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
               >
                 XLSX indir
               </button>
               <button
                 onClick={resetAll}
-                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-md text-sm hover:bg-slate-200"
+                className="min-h-[44px] px-4 py-3 md:py-2 bg-slate-100 text-slate-700 rounded-md text-sm hover:bg-slate-200"
               >
                 Yeni yükle
               </button>
             </div>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
+            <div className="overflow-x-auto overflow-touch overscroll-x-contain border border-slate-200 rounded-lg bg-white">
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
@@ -641,7 +640,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
   };
 
   return (
-    <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+    <section className="bg-white border border-slate-200 rounded-xl p-4 md:p-6 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center">
@@ -685,14 +684,14 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
           <div className="flex gap-3">
             <button
               onClick={() => setStep(prev => (prev === 1 ? 1 : ((prev - 1) as Step)))}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-md text-sm hover:bg-slate-200"
+              className="min-h-[44px] px-4 py-3 md:py-2 bg-slate-100 text-slate-700 rounded-md text-sm hover:bg-slate-200"
             >
               Geri
             </button>
             {step === 2 && (
               <button
                 onClick={handleCompute}
-                className="px-4 py-2 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700"
+                className="min-h-[44px] px-4 py-3 md:py-2 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700"
               >
                 Hesapla
               </button>
@@ -706,7 +705,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
           {step > 1 && (
             <button
               onClick={() => setStep(prev => (prev === 1 ? 1 : ((prev - 1) as Step)))}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-md text-sm hover:bg-slate-200"
+              className="min-h-[44px] px-4 py-3 md:py-2 bg-slate-100 text-slate-700 rounded-md text-sm hover:bg-slate-200"
             >
               Geri
             </button>
@@ -715,7 +714,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
             <button
               disabled={loading}
               onClick={() => rows.length && setStep(2)}
-              className="px-4 py-2 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700 disabled:opacity-50"
+              className="min-h-[44px] px-4 py-3 md:py-2 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700 disabled:opacity-50"
             >
               İlerle
             </button>
@@ -723,7 +722,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
           {step === 2 && (
             <button
               onClick={handleCompute}
-              className="px-4 py-2 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700"
+              className="min-h-[44px] px-4 py-3 md:py-2 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700"
             >
               Hesapla
             </button>

@@ -38,7 +38,7 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal panel */}
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div className="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg animate-fade-in-up">
+        <div className="relative transform overflow-hidden rounded-t-2xl sm:rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg animate-fade-in-up">
           <div className="bg-white px-5 pb-4 pt-6 sm:p-6">
             <div className="sm:flex sm:items-start">
               <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-red-100 sm:mx-0 sm:h-11 sm:w-11">
@@ -62,14 +62,14 @@ export const Modal: React.FC<ModalProps> = ({
             <button
               type="button"
               onClick={handleConfirm}
-              className={`inline-flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm sm:ml-0 sm:w-auto ${confirmButtonClass} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all`}
+              className={`inline-flex w-full justify-center min-h-[44px] rounded-lg px-4 py-3 md:py-2.5 text-sm font-semibold text-white shadow-sm sm:ml-0 sm:w-auto ${confirmButtonClass} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all`}
             >
               {confirmText}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:mt-0 sm:w-auto transition-all"
+              className="mt-3 inline-flex w-full justify-center min-h-[44px] rounded-lg bg-white px-4 py-3 md:py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:mt-0 sm:w-auto transition-all"
             >
               {cancelText}
             </button>

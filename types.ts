@@ -78,6 +78,7 @@ export interface ChannelResult {
       card: number;
       bag: number;
       tape: number;
+      ambalajBag: number;
     };
     productCostTotal: number; // Including overhead if selected
     platformFee: number;
