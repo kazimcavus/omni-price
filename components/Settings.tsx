@@ -99,7 +99,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset })
                 <span className="text-slate-600 font-medium text-sm w-10 flex-shrink-0">{item.suffix}</span>
               </div>
 
-              {!item.isPercentage && (
+              {!item.isPercentage && item.key !== 'euroKuru' && (
                 <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-200">
                   <div>
                     <label className="block text-xs text-slate-600 mb-1.5 font-medium">KDV Modu</label>

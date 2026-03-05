@@ -11,7 +11,7 @@ import {
   ChannelKey,
   ProfitType,
 } from '../types';
-import { calculateAllChannels } from '../utils/math';
+import { calculateAllChannels, calculateDerivedPricesFromTrendyol } from '../utils/math';
 import { exportBulkToExcel } from '../utils/export';
 import { STORAGE_KEY_BULK_STATE } from '../constants';
 
@@ -30,6 +30,7 @@ interface PersistedBulkState {
   rows: UploadedRow[];
   categoryRates: CategoryRateMap;
   results: BulkResultItem[];
+  includeOverhead?: boolean;
 }
 
 const requiredHeaders = [
@@ -39,6 +40,26 @@ const requiredHeaders = [
   'İade Oranı',
   'KDV Oranı',
 ] as const;
+
+function normalizeHeaderForMatch(s: string): string {
+  return s
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\u0130/g, 'I')
+    .replace(/\u0131/g, 'i')
+    .toUpperCase()
+    .replace(/\u0130/g, 'I');
+}
+
+function findHeaderKey(keys: string[], canonicalName: string): string | undefined {
+  const wantNorm = normalizeHeaderForMatch(canonicalName);
+  return keys.find(k => normalizeHeaderForMatch(k) === wantNorm);
+}
+
+function getByHeader(row: Record<string, unknown>, keys: string[], canonicalName: string): unknown {
+  const key = findHeaderKey(keys, canonicalName);
+  return key !== undefined ? row[key] : undefined;
+}
 
 export const BulkWizard: React.FC<BulkWizardProps> = ({
   settings,
@@ -58,6 +79,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
   const [bulkInfluencerChannels, setBulkInfluencerChannels] = useState<ChannelKey[]>(baseInputs.influencerChannels || ['TY']);
   const [bulkIncludeInfluencerInProfit, setBulkIncludeInfluencerInProfit] = useState<boolean>(baseInputs.includeInfluencerInProfit ?? false);
   const [profitType, setProfitType] = useState<ProfitType>('MARGIN');
+  const [bulkIncludeOverhead, setBulkIncludeOverhead] = useState<boolean>(baseInputs.includeOverhead ?? true);
 
   // Load persisted state
   useEffect(() => {
@@ -68,6 +90,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         setRows(parsed.rows || []);
         setCategoryRates(parsed.categoryRates || {});
         setResults(parsed.results || []);
+        setBulkIncludeOverhead(parsed.includeOverhead ?? baseInputs.includeOverhead ?? true);
         if ((parsed.rows || []).length) {
           setStep(3);
         }
@@ -79,9 +102,9 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
 
   // Persist state
   useEffect(() => {
-    const data: PersistedBulkState = { rows, categoryRates, results };
+    const data: PersistedBulkState = { rows, categoryRates, results, includeOverhead: bulkIncludeOverhead };
     localStorage.setItem(STORAGE_KEY_BULK_STATE, JSON.stringify(data));
-  }, [rows, categoryRates, results]);
+  }, [rows, categoryRates, results, bulkIncludeOverhead]);
 
   const uniqueCategories = useMemo(() => {
     const set = new Set<string>();
@@ -95,10 +118,8 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
       const buf = await file.arrayBuffer();
       const json = await parseExcelToJson(buf);
 
-      // Header check
-      const missingHeaders = requiredHeaders.filter(
-        h => !Object.keys(json[0] || {}).includes(h)
-      );
+      const keys = Object.keys(json[0] || {});
+      const missingHeaders = requiredHeaders.filter(h => !findHeaderKey(keys, h));
       if (missingHeaders.length) {
         onToast(`Eksik kolonlar: ${missingHeaders.join(', ')}`);
         setLoading(false);
@@ -108,11 +129,11 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
       const newWarnings: string[] = [];
       const parsedRows: UploadedRow[] = [];
       json.forEach((row, idx) => {
-        const modelCode = String(row['Model Kodu']).trim();
-        const category = String(row['Kategorizasyon']).trim();
-        const cost = Number(row['Maliyet']) || 0;
-        const returnRate = Number(row['İade Oranı']);
-        const kdvRate = Number(row['KDV Oranı']);
+        const modelCode = String(getByHeader(row, keys, 'Model Kodu') ?? '').trim();
+        const category = String(getByHeader(row, keys, 'Kategorizasyon') ?? '').trim();
+        const cost = Number(getByHeader(row, keys, 'Maliyet')) || 0;
+        const returnRate = Number(getByHeader(row, keys, 'İade Oranı'));
+        const kdvRate = Number(getByHeader(row, keys, 'KDV Oranı'));
 
         if (!modelCode || !category || cost <= 0) {
           newWarnings.push(`Satır ${idx + 2}: Model/Kategori/Maliyet eksik`);
@@ -205,6 +226,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
       const inputs: CalculationInputs = {
         ...baseInputs,
         profitType,
+        includeOverhead: bulkIncludeOverhead,
         productCostExKdv: row.cost,
         productKdvRate: row.kdvRate,
         returnRate: row.returnRate,
@@ -226,6 +248,7 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
         discountRate: catRate.discountRate,
         timestamp: now,
         results: res,
+        includeOverhead: bulkIncludeOverhead,
       };
     });
     setResults(computed);
@@ -296,8 +319,8 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
               Kategorilere özel Hedef Kâr, Sabit Fiyat Hedef Kâr, İndirim ve Influencer Komisyon oranlarını girin.
             </p>
             <div className="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
-              <div className="overflow-x-auto overscroll-x-contain overflow-touch">
-              <div className="grid grid-cols-5 gap-4 min-w-[600px] bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
+              <div className="overflow-auto overflow-touch overscroll-contain max-h-[min(350px,45vh)] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-slate-300">
+              <div className="grid grid-cols-5 gap-4 min-w-[600px] bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600 sticky top-0 z-10">
                 <div>Kategori</div>
                 <div>Hedef Kâr Oranı (%)</div>
                 <div>Sabit Fiyat Hedef Kâr Oranı (%)</div>
@@ -360,6 +383,28 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                       <option value="MARGIN">Satış Fiyatından (Margin)</option>
                       <option value="MARKUP">Maliyet Üzerine (Markup)</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Firma Genel Gider Oranı</label>
+                    <div className="flex items-center pt-2">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={bulkIncludeOverhead}
+                        onClick={() => setBulkIncludeOverhead(!bulkIncludeOverhead)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+                          bulkIncludeOverhead ? 'bg-brand-600' : 'bg-slate-200'
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            bulkIncludeOverhead ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                      <span className="ml-3 text-sm text-slate-900">Dahil</span>
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -431,15 +476,15 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                 Yeni yükle
               </button>
               <button
-                onClick={() => exportBulkToExcel(results)}
+                onClick={() => exportBulkToExcel(results, settings, baseInputs)}
                 className="min-h-[44px] px-4 py-3 md:py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
               >
                 XLSX indir
               </button>
             </div>
-            <div className="overflow-x-auto overflow-touch overscroll-x-contain border border-slate-200 rounded-lg bg-white [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-slate-300">
+            <div className="overflow-auto overflow-touch overscroll-contain max-h-[min(450px,55vh)] border border-slate-200 rounded-lg bg-white [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-slate-300">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-600">
                   <tr>
                     <th className="px-3 py-2 text-left">Model</th>
                     <th className="px-3 py-2 text-left">Kategori</th>
@@ -460,6 +505,9 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                         </th>
                       </React.Fragment>
                     ))}
+                    <th className="px-3 py-2 text-right whitespace-nowrap">Modanisa (TL)</th>
+                    <th className="px-3 py-2 text-right whitespace-nowrap">TY Avrupa (EUR)</th>
+                    <th className="px-3 py-2 text-right whitespace-nowrap">TY Avrupa Ü.Ç. (EUR)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -487,6 +535,18 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                           </React.Fragment>
                         );
                       })}
+                      {(() => {
+                        const tyRes = item.results.find(r => r.channelKey === 'TY' && !r.error);
+                        const rowInputs: CalculationInputs = { ...baseInputs, productCostExKdv: item.cost, productKdvRate: item.kdvRate, returnRate: item.returnRate, includeOverhead: item.includeOverhead ?? baseInputs.includeOverhead };
+                        const derived = tyRes ? calculateDerivedPricesFromTrendyol(tyRes.salePrice, settings, rowInputs) : null;
+                        return (
+                          <>
+                            <td className="px-3 py-2 text-right font-semibold text-slate-800">{derived ? derived.modanisa.toFixed(2).replace('.', ',') : '-'}</td>
+                            <td className="px-3 py-2 text-right text-slate-700">{derived ? derived.tyAvrupa.toFixed(2).replace('.', ',') : '-'}</td>
+                            <td className="px-3 py-2 text-right text-slate-500">{derived ? derived.tyAvrupaPsf.toFixed(2).replace('.', ',') : '-'}</td>
+                          </>
+                        );
+                      })()}
                     </tr>
                   ))}
                 </tbody>

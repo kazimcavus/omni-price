@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Settings } from './components/Settings';
 import { Calculator } from './components/Calculator';
 import { ResultCard } from './components/ResultCard';
+import { DerivedPricesCard } from './components/DerivedPricesCard';
 import { Sidebar } from './components/Sidebar';
 import { SavedItems } from './components/SavedItems';
 import { Modal } from './components/Modal';
 import { DuplicateModelModal } from './components/DuplicateModelModal';
 import { CostSetting, CalculationInputs, ChannelKey, CHANNELS, SavedPriceItem, BulkResultItem } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEY_SETTINGS, STORAGE_KEY_INPUTS, STORAGE_KEY_CHANNELS, STORAGE_KEY_SAVED_ITEMS } from './constants';
-import { calculateAllChannels } from './utils/math';
+import { calculateAllChannels, calculateDerivedPricesFromTrendyol } from './utils/math';
 import { exportToExcel } from './utils/export';
 import { BulkWizard } from './components/BulkWizard';
 import { TrendyolKomisyonTarifeWizard } from './components/TrendyolKomisyonTarifeWizard';
@@ -65,11 +66,18 @@ const App: React.FC = () => {
   });
 
   const [savedItems, setSavedItems] = useState<SavedPriceItem[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_SAVED_ITEMS);
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SAVED_ITEMS);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   });
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [pendingModelCode, setPendingModelCode] = useState<string | null>(null);
@@ -89,7 +97,18 @@ const App: React.FC = () => {
   }, [selectedChannels]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_SAVED_ITEMS, JSON.stringify(savedItems));
+    try {
+      const json = JSON.stringify(savedItems);
+      localStorage.setItem(STORAGE_KEY_SAVED_ITEMS, json);
+    } catch (e) {
+      const isQuotaExceeded = e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22);
+      if (isQuotaExceeded) {
+        setToastMsg('Depolama limiti aşıldı. Listeyi Excel\'e aktarıp temizleyin veya bir kısmını silin.');
+      } else {
+        setToastMsg('Kayıt depolama hatası.');
+        console.error(e);
+      }
+    }
   }, [savedItems]);
 
   // Toast Timer
@@ -99,6 +118,13 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [toastMsg]);
+
+  // Scroll-to-top button visibility
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 300);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Prevent number input value change on scroll
   useEffect(() => {
@@ -130,12 +156,15 @@ const App: React.FC = () => {
   };
 
   const handleSaveModel = (modelCode: string) => {
+    const tyResult = results.find(r => r.channelKey === 'TY' && !r.error);
+    const derived = tyResult ? calculateDerivedPricesFromTrendyol(tyResult.salePrice, settings, inputs) : null;
     const newItem: SavedPriceItem = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       modelCode,
       timestamp: Date.now(),
       discountRate: inputs.discountRate,
-      results: results.filter(r => !r.error)
+      results: results.filter(r => !r.error),
+      ...(derived && { derivedPrices: derived }),
     };
 
     // Check for duplicate model code (case-insensitive)
@@ -184,24 +213,36 @@ const App: React.FC = () => {
     setToastMsg('Model silindi!');
   };
 
-  const bulkResultsToSavedItems = (items: BulkResultItem[]): SavedPriceItem[] => {
-    return items.map(item => ({
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      modelCode: item.modelCode,
-      timestamp: item.timestamp,
-      discountRate: item.discountRate,
-      results: item.results.filter(r => !r.error),
-    }));
+  const bulkResultsToSavedItems = (items: BulkResultItem[], settingsArg: CostSetting[], baseInputsArg: CalculationInputs): SavedPriceItem[] => {
+    return items.map(item => {
+      const tyRes = item.results.find(r => r.channelKey === 'TY' && !r.error);
+      const rowInputs: CalculationInputs = {
+        ...baseInputsArg,
+        productCostExKdv: item.cost,
+        productKdvRate: item.kdvRate,
+        returnRate: item.returnRate,
+        includeOverhead: item.includeOverhead ?? baseInputsArg.includeOverhead,
+      };
+      const derived = tyRes ? calculateDerivedPricesFromTrendyol(tyRes.salePrice, settingsArg, rowInputs) : null;
+      return {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        modelCode: item.modelCode,
+        timestamp: item.timestamp,
+        discountRate: item.discountRate,
+        results: item.results.filter(r => !r.error),
+        ...(derived && { derivedPrices: derived }),
+      };
+    });
   };
 
   const handleBulkAppend = (items: BulkResultItem[]) => {
-    const mapped = bulkResultsToSavedItems(items);
+    const mapped = bulkResultsToSavedItems(items, settings, inputs);
     setSavedItems(prev => [...mapped, ...prev]);
     setToastMsg('Toplu fiyatlar listeye eklendi.');
   };
 
   const handleBulkReplace = (items: BulkResultItem[]) => {
-    const mapped = bulkResultsToSavedItems(items);
+    const mapped = bulkResultsToSavedItems(items, settings, inputs);
     setSavedItems(mapped);
     setToastMsg('Liste temizlendi ve yeni fiyatlar eklendi.');
   };
@@ -405,6 +446,12 @@ const App: React.FC = () => {
                  )}
               </div>
 
+              {(() => {
+                const tyResult = results.find(r => r.channelKey === 'TY' && !r.error);
+                const derived = tyResult ? calculateDerivedPricesFromTrendyol(tyResult.salePrice, settings, inputs) : null;
+                return derived ? <DerivedPricesCard derived={derived} onCopy={handleCopyToast} /> : null;
+              })()}
+
               <SavedItems 
                 items={savedItems} 
                 onDelete={handleDeleteItem}
@@ -472,6 +519,20 @@ const App: React.FC = () => {
           onKeepBoth={handleKeepBoth}
           modelCode={pendingModelCode}
         />
+      )}
+
+      {/* Scroll to Top */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-24 md:bottom-8 right-4 md:right-8 z-40 w-12 h-12 rounded-full bg-brand-600 text-white shadow-lg hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 flex items-center justify-center transition-all"
+          aria-label="Sayfa başına dön"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
       )}
 
       {/* Toast Notification */}

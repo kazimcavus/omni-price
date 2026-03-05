@@ -54,6 +54,7 @@ export interface BulkResultItem {
   discountRate: number;
   timestamp: number;
   results: ChannelResult[];
+  includeOverhead?: boolean;
 }
 
 export interface CalculatedCostDetail {
@@ -102,6 +103,11 @@ export interface SavedPriceItem {
   timestamp: number;
   discountRate: number;
   results: ChannelResult[];
+  derivedPrices?: {
+    modanisa: number;
+    tyAvrupa: number;
+    tyAvrupaPsf: number;
+  };
 }
 
 // Trendyol Komisyon Tarifeleri (4 teklif: aralık + komisyon)

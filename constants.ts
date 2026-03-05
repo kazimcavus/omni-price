@@ -27,6 +27,9 @@ export const DEFAULT_SETTINGS: CostSetting[] = [
   // E-Fatura
   { key: 'invoiceMp', label: 'e-Fatura (Pazaryeri)', value: 0.19, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'invoiceSite', label: 'e-Fatura (Site)', value: 1.2, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+
+  // Kur (sadece döviz kuru, KDV ile ilgili değil)
+  { key: 'euroKuru', label: 'Euro Kuru', value: 50, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 0 },
 ];
 
 export const STORAGE_KEY_SETTINGS = 'sales_price_calc_settings_v1';

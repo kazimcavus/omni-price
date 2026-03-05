@@ -22,6 +22,8 @@ export const SavedItems: React.FC<SavedItemsProps> = ({ items, onDelete, onExpor
   }, [items, searchQuery]);
   const formatCurrency = (val: number) => 
     new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+  const formatEur = (val: number) =>
+    new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -108,9 +110,9 @@ export const SavedItems: React.FC<SavedItemsProps> = ({ items, onDelete, onExpor
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-auto overflow-touch overscroll-contain max-h-[min(450px,55vh)] rounded-lg border border-slate-200 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-slate-300">
         <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
+          <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Model Kodu</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tarih</th>
@@ -134,13 +136,16 @@ export const SavedItems: React.FC<SavedItemsProps> = ({ items, onDelete, onExpor
                   ));
                 }
               })()}
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Modanisa (TL)</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">TY Avrupa (EUR)</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">TY Avrupa Ü.Ç. (EUR)</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">İşlem</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={CHANNELS.length * (items.some(item => item.discountRate > 0) ? 2 : 1) + 3} className="px-4 py-8 text-center text-sm text-slate-500">
+                <td colSpan={CHANNELS.length * (items.some(item => item.discountRate > 0) ? 2 : 1) + 6} className="px-4 py-8 text-center text-sm text-slate-500">
                   Arama sonucu bulunamadı.
                 </td>
               </tr>
@@ -177,6 +182,9 @@ export const SavedItems: React.FC<SavedItemsProps> = ({ items, onDelete, onExpor
                       );
                     })
                   )}
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-900">{item.derivedPrices ? formatCurrency(item.derivedPrices.modanisa) : '-'}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-900">{item.derivedPrices ? formatEur(item.derivedPrices.tyAvrupa) : '-'}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">{item.derivedPrices ? formatEur(item.derivedPrices.tyAvrupaPsf) : '-'}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => onDelete(item.id)}

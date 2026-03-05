@@ -343,3 +343,42 @@ export function calculatePriceForTargetProfit(
     return { price: targetNet / (1 - commDecimal) };
   }
 }
+
+// --- Modanisa & Trendyol Avrupa (TY fiyatından türetilmiş fiyatlar) ---
+
+export interface DerivedPricesResult {
+  modanisa: number;
+  tyAvrupa: number;
+  tyAvrupaPsf: number;
+}
+
+export function calculateDerivedPricesFromTrendyol(
+  tySalePrice: number,
+  settings: CostSetting[],
+  _inputs: CalculationInputs
+): DerivedPricesResult | null {
+  if (tySalePrice <= 0 || !isFinite(tySalePrice)) return null;
+
+  const getSetting = (key: string) => settings.find(s => s.key === key);
+  const tyCommissionS = getSetting('tyCommission');
+  const euroKuruS = getSetting('euroKuru');
+  if (!tyCommissionS || !euroKuruS) return null;
+
+  const tyCommission = tyCommissionS.value;
+  const euroKuru = euroKuruS.value;
+  if (euroKuru <= 0) return null;
+
+  const shipVal = getSetting('marketplaceShip');
+  if (!shipVal) return null;
+  const tyShipCost = toKdvDahil(shipVal.value, shipVal.kdvMode, shipVal.kdvRate);
+
+  const modanisa = Math.ceil((tySalePrice * 1.1) / 10) * 10 - 0.01;
+
+  const netAfterComm = tySalePrice * (1 - tyCommission / 100);
+  const rawTyAvrupa = ((netAfterComm - tyShipCost) * 0.9) / euroKuru;
+  const tyAvrupa = Math.ceil(rawTyAvrupa * 10) / 10;
+
+  const tyAvrupaPsf = Math.ceil((tyAvrupa * 1.8) / 5) * 5 - 0.01;
+
+  return { modanisa, tyAvrupa, tyAvrupaPsf };
+}

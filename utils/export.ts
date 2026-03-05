@@ -1,5 +1,6 @@
 import { downloadExcel } from './excel';
-import { SavedPriceItem, CHANNELS, BulkResultItem, KomisyonTeklifResultItem } from '../types';
+import { SavedPriceItem, CHANNELS, BulkResultItem, KomisyonTeklifResultItem, CalculationInputs, CostSetting } from '../types';
+import { calculateDerivedPricesFromTrendyol } from './math';
 
 export const exportToExcel = async (items: SavedPriceItem[]) => {
   if (items.length === 0) return;
@@ -15,6 +16,8 @@ export const exportToExcel = async (items: SavedPriceItem[]) => {
   } else {
     CHANNELS.forEach(ch => headers.push(ch.label));
   }
+
+  headers.push('Modanisa (TL)', 'TY Avrupa (EUR)', 'TY Avrupa Üstü Çizili (EUR)');
 
   const rows: (string | number)[][] = [headers];
 
@@ -48,6 +51,10 @@ export const exportToExcel = async (items: SavedPriceItem[]) => {
       });
     }
 
+    row.push(item.derivedPrices ? round2(item.derivedPrices.modanisa) : '');
+    row.push(item.derivedPrices ? round2(item.derivedPrices.tyAvrupa) : '');
+    row.push(item.derivedPrices ? round2(item.derivedPrices.tyAvrupaPsf) : '');
+
     rows.push(row);
   });
 
@@ -57,7 +64,11 @@ export const exportToExcel = async (items: SavedPriceItem[]) => {
   await downloadExcel(rows, 'Fiyat Listesi', `fiyat_listesi_${new Date().toISOString().split('T')[0]}.xlsx`, colWidths);
 };
 
-export const exportBulkToExcel = async (items: BulkResultItem[]) => {
+export const exportBulkToExcel = async (
+  items: BulkResultItem[],
+  settings: CostSetting[],
+  baseInputs: CalculationInputs
+) => {
   if (items.length === 0) return;
 
   const headers: (string | number)[] = [
@@ -74,6 +85,8 @@ export const exportBulkToExcel = async (items: BulkResultItem[]) => {
     headers.push(`${ch.label} Liste Fiyatı`);
     headers.push(`${ch.label} Satış Fiyatı`);
   });
+
+  headers.push('Modanisa (TL)', 'TY Avrupa (EUR)', 'TY Avrupa Üstü Çizili (EUR)');
 
   const rows: (string | number)[][] = [headers];
 
@@ -99,6 +112,13 @@ export const exportBulkToExcel = async (items: BulkResultItem[]) => {
       row.push(res?.listPrice != null ? round2(res.listPrice) : '');
       row.push(res?.salePrice != null ? round2(res.salePrice) : '');
     });
+
+    const tyRes = item.results.find(r => r.channelKey === 'TY' && !r.error);
+    const rowInputs: CalculationInputs = { ...baseInputs, productCostExKdv: item.cost, productKdvRate: item.kdvRate, returnRate: item.returnRate, includeOverhead: item.includeOverhead ?? baseInputs.includeOverhead };
+    const derived = tyRes ? calculateDerivedPricesFromTrendyol(tyRes.salePrice, settings, rowInputs) : null;
+    row.push(derived ? round2(derived.modanisa) : '');
+    row.push(derived ? round2(derived.tyAvrupa) : '');
+    row.push(derived ? round2(derived.tyAvrupaPsf) : '');
 
     rows.push(row);
   });

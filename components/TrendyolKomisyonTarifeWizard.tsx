@@ -31,6 +31,7 @@ interface PersistedTarifeState {
   results: KomisyonTeklifResultItem[];
   originalSheetRows: Record<string, unknown>[];
   useAltLimitFallback: boolean;
+  includeOverhead?: boolean;
 }
 
 const TRENDYOL_HEADERS = [
@@ -139,6 +140,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
   const [originalSheetRows, setOriginalSheetRows] = useState<Record<string, unknown>[]>([]);
   const [useAltLimitFallback, setUseAltLimitFallback] = useState(false);
   const [profitType, setProfitType] = useState<ProfitType>('MARGIN');
+  const [komisyonIncludeOverhead, setKomisyonIncludeOverhead] = useState<boolean>(baseInputs.includeOverhead ?? true);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY_KOMISYON_TARIFE_STATE);
@@ -150,6 +152,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
         setResults(parsed.results || []);
         setOriginalSheetRows(parsed.originalSheetRows || []);
         setUseAltLimitFallback(parsed.useAltLimitFallback ?? false);
+        setKomisyonIncludeOverhead(parsed.includeOverhead ?? baseInputs.includeOverhead ?? true);
         if ((parsed.rows || []).length) setStep(3);
       } catch {
         // ignore
@@ -164,9 +167,10 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
       results,
       originalSheetRows,
       useAltLimitFallback,
+      includeOverhead: komisyonIncludeOverhead,
     };
     localStorage.setItem(STORAGE_KEY_KOMISYON_TARIFE_STATE, JSON.stringify(data));
-  }, [rows, categoryRates, results, originalSheetRows, useAltLimitFallback]);
+  }, [rows, categoryRates, results, originalSheetRows, useAltLimitFallback, komisyonIncludeOverhead]);
 
   const uniqueCategories = useMemo(
     () => [...new Set(rows.map(r => getRateKey(r)))],
@@ -351,6 +355,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
       const inputs: CalculationInputs = {
         ...baseInputs,
         profitType,
+        includeOverhead: komisyonIncludeOverhead,
         productCostExKdv: row.cost,
         productKdvRate: row.kdvRate,
         returnRate: row.returnRate,
@@ -507,8 +512,8 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
               Hedef kâr verilecek gruba göre Hedef Kâr Oranı (%) girin. Grup: Kategorizasyon varsa Kategorizasyon, yoksa Trendyol Kategori.
             </p>
             <div className="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
-              <div className="overflow-x-auto overflow-touch overscroll-x-contain">
-              <div className="grid grid-cols-2 gap-4 min-w-[280px] bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
+              <div className="overflow-auto overflow-touch overscroll-contain max-h-[min(350px,45vh)] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-slate-300">
+              <div className="grid grid-cols-2 gap-4 min-w-[280px] bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600 sticky top-0 z-10">
                 <div>Kategorizasyon / Kategori</div>
                 <div>Hedef Kâr Oranı (%)</div>
               </div>
@@ -544,16 +549,40 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
             <div className="mt-4 bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
               <h4 className="text-sm font-semibold text-slate-800 mb-4">Hesaplama Ayarları</h4>
               <div className="space-y-4">
-                <div className="sm:w-1/2">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Kâr Hesaplama Tipi</label>
-                  <select
-                    value={profitType}
-                    onChange={e => setProfitType(e.target.value as ProfitType)}
-                    className="block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 transition-all cursor-pointer"
-                  >
-                    <option value="MARGIN">Satış Fiyatından (Margin)</option>
-                    <option value="MARKUP">Maliyet Üzerine (Markup)</option>
-                  </select>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Kâr Hesaplama Tipi</label>
+                    <select
+                      value={profitType}
+                      onChange={e => setProfitType(e.target.value as ProfitType)}
+                      className="block w-full rounded-lg border-slate-300 py-2.5 pl-3 pr-10 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 transition-all cursor-pointer"
+                    >
+                      <option value="MARGIN">Satış Fiyatından (Margin)</option>
+                      <option value="MARKUP">Maliyet Üzerine (Markup)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Firma Genel Gider Oranı</label>
+                    <div className="flex items-center pt-2">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={komisyonIncludeOverhead}
+                        onClick={() => setKomisyonIncludeOverhead(!komisyonIncludeOverhead)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+                          komisyonIncludeOverhead ? 'bg-brand-600' : 'bg-slate-200'
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            komisyonIncludeOverhead ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                      <span className="ml-3 text-sm text-slate-900">Dahil</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center">
                   <input
@@ -588,9 +617,9 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
                 Yeni yükle
               </button>
             </div>
-            <div className="overflow-x-auto overflow-touch overscroll-x-contain border border-slate-200 rounded-lg bg-white">
+            <div className="overflow-auto overflow-touch overscroll-contain max-h-[min(450px,55vh)] border border-slate-200 rounded-lg bg-white [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-slate-300">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-600">
                   <tr>
                     <th className="px-3 py-2 text-left">Stok Kodu</th>
                     <th className="px-3 py-2 text-left">Model</th>
