@@ -341,25 +341,25 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
                       <div className="text-sm font-semibold text-slate-800 truncate">{cat}</div>
                       <input
                         type="number"
-                        value={rate.targetProfitRate === 0 ? '' : rate.targetProfitRate}
+                        value={rate.targetProfitRate != null ? String(rate.targetProfitRate) : ''}
                         onChange={(e) => handleRateChange(cat, 'targetProfitRate', parseFloat(e.target.value) || 0)}
                         className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                       />
                       <input
                         type="number"
-                        value={rate.sabitFiyatTargetProfitRate === 0 ? '' : rate.sabitFiyatTargetProfitRate}
+                        value={rate.sabitFiyatTargetProfitRate != null ? String(rate.sabitFiyatTargetProfitRate) : ''}
                         onChange={(e) => handleRateChange(cat, 'sabitFiyatTargetProfitRate', parseFloat(e.target.value) || 0)}
                         className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                       />
                       <input
                         type="number"
-                        value={rate.discountRate === 0 ? '' : rate.discountRate}
+                        value={rate.discountRate != null ? String(rate.discountRate) : ''}
                         onChange={(e) => handleRateChange(cat, 'discountRate', parseFloat(e.target.value) || 0)}
                         className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                       />
                       <input
                         type="number"
-                        value={rate.influencerCommissionRate === 0 ? '' : rate.influencerCommissionRate}
+                        value={rate.influencerCommissionRate != null ? String(rate.influencerCommissionRate) : ''}
                         onChange={(e) => handleRateChange(cat, 'influencerCommissionRate', parseFloat(e.target.value) || 0)}
                         className="w-full rounded-lg border-slate-300 text-sm py-2 px-3 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20"
                       />

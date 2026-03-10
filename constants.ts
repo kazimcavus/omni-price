@@ -22,7 +22,7 @@ export const DEFAULT_SETTINGS: CostSetting[] = [
   { key: 'card', label: 'Teşekkür Kartı', value: 1.2, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'bag', label: 'Kutu Poşeti', value: 2.6, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'tape', label: 'İade Emniyet Şeridi', value: 7.5, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
-  { key: 'ambalajBag', label: 'Ambalaj Poşeti', value: 4.5, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'ambalajBag', label: 'Ambalaj Poşeti', value: 6, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
 
   // E-Fatura
   { key: 'invoiceMp', label: 'e-Fatura (Pazaryeri)', value: 0.19, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },

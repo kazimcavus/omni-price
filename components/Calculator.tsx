@@ -66,7 +66,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               type="number"
               min="0"
               step="0.01"
-              value={inputs.productCostExKdv === 0 ? '' : inputs.productCostExKdv}
+              value={inputs.productCostExKdv != null ? String(inputs.productCostExKdv) : ''}
               onChange={(e) => handleNumberChange('productCostExKdv', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
@@ -84,7 +84,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               type="number"
               min="0"
               step="0.1"
-              value={inputs.productKdvRate === 0 ? '' : inputs.productKdvRate}
+              value={inputs.productKdvRate != null ? String(inputs.productKdvRate) : ''}
               onChange={(e) => handleNumberChange('productKdvRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
@@ -103,7 +103,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               min="0"
               max="99"
               step="0.1"
-              value={inputs.returnRate === 0 ? '' : inputs.returnRate}
+              value={inputs.returnRate != null ? String(inputs.returnRate) : ''}
               onChange={(e) => handleNumberChange('returnRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
@@ -120,7 +120,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
             <input
               type="number"
               step="0.1"
-              value={inputs.targetProfitRate === 0 ? '' : inputs.targetProfitRate}
+              value={inputs.targetProfitRate != null ? String(inputs.targetProfitRate) : ''}
               onChange={(e) => handleNumberChange('targetProfitRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
@@ -139,7 +139,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
             <input
               type="number"
               step="0.1"
-              value={inputs.sabitFiyatTargetProfitRate === 0 ? '' : inputs.sabitFiyatTargetProfitRate}
+              value={inputs.sabitFiyatTargetProfitRate != null ? String(inputs.sabitFiyatTargetProfitRate) : ''}
               onChange={(e) => handleNumberChange('sabitFiyatTargetProfitRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />
@@ -159,7 +159,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
               max="99"
               step="0.1"
               placeholder="0"
-              value={inputs.discountRate === 0 ? '' : inputs.discountRate}
+              value={inputs.discountRate != null ? String(inputs.discountRate) : ''}
               onChange={(e) => handleNumberChange('discountRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all placeholder:text-slate-400"
             />
@@ -176,7 +176,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ inputs, onChange, onSave
             <input
               type="number"
               step="0.1"
-              value={inputs.influencerCommissionRate === 0 ? '' : inputs.influencerCommissionRate}
+              value={inputs.influencerCommissionRate != null ? String(inputs.influencerCommissionRate) : ''}
               onChange={(e) => handleNumberChange('influencerCommissionRate', e)}
               className="block w-full rounded-lg border-slate-300 pl-3 pr-10 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 sm:text-sm border bg-white text-slate-900 appearance-none transition-all"
             />

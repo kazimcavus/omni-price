@@ -374,6 +374,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
 
       for (let i = 0; i < row.offers.length; i++) {
         const offer = row.offers[i];
+        if (i === 0) continue; // Teklif 1 seçilmez — sadece indirimli teklifler (2,3,4) kabul edilir
         if (offer.commissionRate <= 0 || offer.priceUpper <= 0) continue;
         if (offer.commissionRate >= normalTyCommission) continue;
 
@@ -534,7 +535,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
                       <div className="text-sm font-semibold text-slate-800 truncate">{cat}</div>
                       <input
                         type="number"
-                        value={rate.targetProfitRate === 0 ? '' : rate.targetProfitRate}
+                        value={rate.targetProfitRate != null ? String(rate.targetProfitRate) : ''}
                         onChange={e =>
                           handleRateChange(cat, 'targetProfitRate', parseFloat(e.target.value) || 0)
                         }
