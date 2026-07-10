@@ -12,11 +12,12 @@ import { DEFAULT_SETTINGS, STORAGE_KEY_SETTINGS, STORAGE_KEY_INPUTS, STORAGE_KEY
 import { calculateAllChannels, calculateDerivedPricesFromTrendyol } from './utils/math';
 import { exportToExcel } from './utils/export';
 import { BulkWizard } from './components/BulkWizard';
+import { ProfitScenarioWizard } from './components/ProfitScenarioWizard';
 import { TrendyolKomisyonTarifeWizard } from './components/TrendyolKomisyonTarifeWizard';
 
 const App: React.FC = () => {
   // --- State ---
-  const [activeTab, setActiveTab] = useState<'CALC' | 'BULK' | 'KOMISYON_TARIFE' | 'SETTINGS'>('CALC');
+  const [activeTab, setActiveTab] = useState<'CALC' | 'BULK' | 'KAR_SENARYO' | 'KOMISYON_TARIFE' | 'SETTINGS'>('CALC');
   
   const [settings, setSettings] = useState<CostSetting[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
@@ -313,6 +314,16 @@ const App: React.FC = () => {
                 Liste Yükle
               </button>
               <button
+                onClick={() => setActiveTab('KAR_SENARYO')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full transition-colors ${
+                  activeTab === 'KAR_SENARYO'
+                    ? 'border-brand-500 text-slate-900'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                Kâr Senaryosu
+              </button>
+              <button
                 onClick={() => setActiveTab('KOMISYON_TARIFE')}
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full transition-colors ${
                   activeTab === 'KOMISYON_TARIFE'
@@ -357,6 +368,17 @@ const App: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             <span className="text-xs mt-0.5 font-medium">Liste Yükle</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('KAR_SENARYO')}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[44px] py-2 transition-colors ${activeTab === 'KAR_SENARYO' ? 'text-brand-600' : 'text-slate-500'}`}
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 5L5 19" />
+              <circle cx="7.5" cy="7.5" r="2.5" />
+              <circle cx="16.5" cy="16.5" r="2.5" />
+            </svg>
+            <span className="text-xs mt-0.5 font-medium">Senaryo</span>
           </button>
           <button
             onClick={() => setActiveTab('KOMISYON_TARIFE')}
@@ -459,6 +481,16 @@ const App: React.FC = () => {
                 onClearAll={handleClearAll}
               />
             </div>
+          </div>
+        )}
+
+        {activeTab === 'KAR_SENARYO' && (
+          <div className="max-w-7xl mx-auto">
+            <ProfitScenarioWizard
+              settings={settings}
+              baseInputs={inputs}
+              onToast={(msg) => setToastMsg(msg)}
+            />
           </div>
         )}
 

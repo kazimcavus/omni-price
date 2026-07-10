@@ -1,5 +1,69 @@
 import ExcelJS from 'exceljs';
 
+/** Başlıkları büyük/küçük harf, fazla boşluk ve Türkçe İ/ı farklarından bağımsız karşılaştırır */
+export function normalizeHeaderForMatch(s: string): string {
+  return s
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/İ/g, 'I')
+    .replace(/ı/g, 'i')
+    .toUpperCase()
+    .replace(/İ/g, 'I');
+}
+
+export function findHeaderKey(keys: string[], canonicalName: string): string | undefined {
+  const wantNorm = normalizeHeaderForMatch(canonicalName);
+  return keys.find(k => normalizeHeaderForMatch(k) === wantNorm);
+}
+
+export function getByHeader(row: Record<string, unknown>, keys: string[], canonicalName: string): unknown {
+  const key = findHeaderKey(keys, canonicalName);
+  return key !== undefined ? row[key] : undefined;
+}
+
+/**
+ * Hücre değerini sayıya çevirir. Excel hücresi zaten sayıysa doğrudan döner.
+ * Metin hücrelerde Türkçe biçim varsayılır: virgül ondalık, nokta binlik.
+ * "1.234,56" -> 1234.56 | "1.299" -> 1299 | "499.99" -> 499.99 | "12,5" -> 12.5
+ */
+export function toNumber(value: unknown): number {
+  if (typeof value === 'number') return isFinite(value) ? value : NaN;
+  if (value == null) return NaN;
+
+  let s = String(value).trim();
+  if (!s) return NaN;
+
+  s = s.replace(/[^\d.,-]/g, ''); // ₺, %, boşluk vb.
+  if (!s) return NaN;
+
+  const commas = (s.match(/,/g) || []).length;
+  const dots = (s.match(/\./g) || []).length;
+
+  if (commas > 0 && dots > 0) {
+    // İki ayırıcı da var: sağdaki ondalıktır, soldakiler binliktir.
+    const decimalSep = s.lastIndexOf(',') > s.lastIndexOf('.') ? ',' : '.';
+    const thousandSep = decimalSep === ',' ? '.' : ',';
+    s = s.split(thousandSep).join('').replace(decimalSep, '.');
+  } else if (commas > 1) {
+    s = s.split(',').join(''); // "1,234,567"
+  } else if (commas === 1) {
+    s = s.replace(',', '.'); // TR ondalık
+  } else if (dots > 1) {
+    s = s.split('.').join(''); // "1.234.567"
+  } else if (dots === 1) {
+    // Tek nokta belirsiz: "499.99" ondalık ama "1.299" binlik.
+    // Noktadan sonra tam 3 hane ve öncesinde en fazla 3 hane varsa binlik say.
+    const [intPart, frac] = s.split('.');
+    const intDigits = intPart.replace('-', '');
+    if (frac.length === 3 && intDigits.length >= 1 && intDigits.length <= 3) {
+      s = intPart + frac;
+    }
+  }
+
+  const n = parseFloat(s);
+  return isFinite(n) ? n : NaN;
+}
+
 /** Excel buffer'dan ilk sayfayı JSON satırlarına çevirir (sheet_to_json eşdeğeri) */
 export async function parseExcelToJson(buffer: ArrayBuffer): Promise<Record<string, unknown>[]> {
   const workbook = new ExcelJS.Workbook();

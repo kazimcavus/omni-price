@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { parseExcelToJson } from '../utils/excel';
+import { parseExcelToJson, findHeaderKey, getByHeader } from '../utils/excel';
 import {
   CalculationInputs,
   CostSetting,
@@ -40,26 +40,6 @@ const requiredHeaders = [
   'İade Oranı',
   'KDV Oranı',
 ] as const;
-
-function normalizeHeaderForMatch(s: string): string {
-  return s
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/\u0130/g, 'I')
-    .replace(/\u0131/g, 'i')
-    .toUpperCase()
-    .replace(/\u0130/g, 'I');
-}
-
-function findHeaderKey(keys: string[], canonicalName: string): string | undefined {
-  const wantNorm = normalizeHeaderForMatch(canonicalName);
-  return keys.find(k => normalizeHeaderForMatch(k) === wantNorm);
-}
-
-function getByHeader(row: Record<string, unknown>, keys: string[], canonicalName: string): unknown {
-  const key = findHeaderKey(keys, canonicalName);
-  return key !== undefined ? row[key] : undefined;
-}
 
 export const BulkWizard: React.FC<BulkWizardProps> = ({
   settings,

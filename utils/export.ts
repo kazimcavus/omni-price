@@ -1,5 +1,5 @@
 import { downloadExcel } from './excel';
-import { SavedPriceItem, CHANNELS, BulkResultItem, KomisyonTeklifResultItem, CalculationInputs, CostSetting } from '../types';
+import { SavedPriceItem, CHANNELS, BulkResultItem, KomisyonTeklifResultItem, CalculationInputs, CostSetting, ProfitScenarioResultItem, ProfitType } from '../types';
 import { calculateDerivedPricesFromTrendyol } from './math';
 
 export const exportToExcel = async (items: SavedPriceItem[]) => {
@@ -127,6 +127,81 @@ export const exportBulkToExcel = async (
     wch: idx === 0 ? 18 : idx === 1 ? 16 : idx === 6 ? 18 : 14,
   }));
   await downloadExcel(rows, 'Toplu Fiyatlar', `toplu_fiyatlar_${new Date().toISOString().split('T')[0]}.xlsx`, colWidths);
+};
+
+/** Kâr senaryosu için boş örnek dosya */
+export const downloadProfitScenarioTemplate = async () => {
+  const rows: (string | number)[][] = [
+    ['Model Kodu', 'Fiyat', 'Maliyet', 'KDV Oranı', 'İade Oranı'],
+    ['ABC-01', 1299.9, 350, 10, 15],
+    ['ABC-02', 899.9, 220, 20, 22],
+    ['ABC-03', 1899.9, 520, 10, 15],
+  ];
+  const colWidths = [{ wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 12 }];
+  await downloadExcel(rows, 'Şablon', 'kar_senaryo_sablonu.xlsx', colWidths);
+};
+
+export const exportProfitScenarioToExcel = async (
+  items: ProfitScenarioResultItem[],
+  discountRates: number[],
+  channelLabel: string,
+  profitType: ProfitType
+) => {
+  if (items.length === 0) return;
+
+  const profitRateLabel = profitType === 'MARGIN' ? 'Kâr % (Satıştan)' : 'Kâr % (Maliyetten)';
+
+  const headers: (string | number)[] = [
+    'Model Kodu',
+    'Kanal',
+    'Fiyat',
+    'Maliyet (KDV Hariç)',
+    'KDV Oranı',
+    'İade Oranı',
+    'Sabit Gider',
+    'Komisyon Oranı',
+    'Net Kâr',
+    profitRateLabel,
+    'Başabaş İndirim %',
+  ];
+
+  discountRates.forEach(d => {
+    headers.push(`%${d} İndirimli Fiyat`, `%${d} Net Kâr`, `%${d} ${profitRateLabel}`);
+  });
+
+  const rows: (string | number)[][] = [headers];
+
+  items.forEach(item => {
+    const row: (string | number)[] = [
+      item.modelCode,
+      channelLabel,
+      round2(item.base.price),
+      item.cost,
+      item.kdvRate,
+      item.returnRate,
+      round2(item.fixedCosts),
+      item.commissionRate,
+      round2(item.base.netProfit),
+      round2(item.base.profitRate),
+      item.breakEvenDiscountRate != null && item.breakEvenDiscountRate > 0
+        ? round2(item.breakEvenDiscountRate)
+        : '',
+    ];
+
+    item.scenarios.forEach(s => {
+      row.push(round2(s.price), round2(s.netProfit), round2(s.profitRate));
+    });
+
+    rows.push(row);
+  });
+
+  const colWidths = headers.map((_, idx) => ({ wch: idx === 0 ? 18 : 16 }));
+  await downloadExcel(
+    rows,
+    'Kâr Senaryosu',
+    `kar_senaryosu_${new Date().toISOString().split('T')[0]}.xlsx`,
+    colWidths
+  );
 };
 
 function findHeaderKey(keys: string[], name: string): string | undefined {

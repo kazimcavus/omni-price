@@ -97,6 +97,39 @@ export const CHANNELS: { key: ChannelKey; label: string }[] = [
   { key: 'SABIT_FIYAT', label: 'Sabit Fiyat' },
 ];
 
+// Kâr senaryosu: fiyatı verilen ürüne indirim uygulayıp kalan kârı bulma
+export interface ProfitScenarioRow {
+  modelCode: string;
+  price: number;   // Mevcut satış fiyatı (KDV dahil)
+  cost: number;    // Maliyet (KDV hariç)
+  kdvRate: number;
+  returnRate: number;
+}
+
+export interface DiscountScenarioOutcome {
+  discountRate: number;
+  price: number;
+  commissionAmount: number;
+  netProfit: number;
+  profitRate: number;
+}
+
+export interface DiscountScenarioSet {
+  channelKey: ChannelKey;
+  commissionRate: number;
+  fixedCosts: number;
+  base: DiscountScenarioOutcome;      // indirimsiz hâli
+  scenarios: DiscountScenarioOutcome[];
+  breakEvenDiscountRate: number | null; // kârın sıfırlandığı indirim oranı
+}
+
+export interface ProfitScenarioResultItem extends DiscountScenarioSet {
+  modelCode: string;
+  cost: number;
+  kdvRate: number;
+  returnRate: number;
+}
+
 export interface SavedPriceItem {
   id: string;
   modelCode: string;

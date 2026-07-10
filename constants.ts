@@ -38,3 +38,7 @@ export const STORAGE_KEY_CHANNELS = 'sales_price_calc_channels_v1';
 export const STORAGE_KEY_SAVED_ITEMS = 'sales_price_calc_saved_items_v1';
 export const STORAGE_KEY_BULK_STATE = 'sales_price_calc_bulk_state_v1';
 export const STORAGE_KEY_KOMISYON_TARIFE_STATE = 'sales_price_calc_komisyon_tarife_state_v1';
+export const STORAGE_KEY_PROFIT_SCENARIO_STATE = 'sales_price_calc_profit_scenario_state_v1';
+
+export const DEFAULT_DISCOUNT_SCENARIOS = [10, 20, 30];
+export const DISCOUNT_CHIP_OPTIONS = [5, 10, 15, 20, 25, 30, 40, 50];
