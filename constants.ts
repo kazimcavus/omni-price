@@ -18,14 +18,14 @@ export const DEFAULT_SETTINGS: CostSetting[] = [
   { key: 'pazaramaShip', label: 'Pazarama Kargo', value: 134.33, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
 
   // Ambalaj
-  { key: 'box', label: 'Kutu', value: 12.75, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'box', label: 'Kutu', value: 14.5, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'card', label: 'Teşekkür Kartı', value: 1.2, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
-  { key: 'bag', label: 'Kutu Poşeti', value: 2.6, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
-  { key: 'tape', label: 'İade Emniyet Şeridi', value: 7.5, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'bag', label: 'Kutu Poşeti', value: 3.85, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'tape', label: 'İade Emniyet Şeridi', value: 16, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'ambalajBag', label: 'Ambalaj Poşeti', value: 6, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
 
   // E-Fatura
-  { key: 'invoiceMp', label: 'e-Fatura (Pazaryeri)', value: 0.19, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'invoiceMp', label: 'e-Fatura (Pazaryeri)', value: 1, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'invoiceSite', label: 'e-Fatura (Site)', value: 1.2, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
 
   // Kur (sadece döviz kuru, KDV ile ilgili değil)
