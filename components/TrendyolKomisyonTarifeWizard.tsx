@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { parseExcelToJson } from '../utils/excel';
+import { isQuotaError } from '../utils/storage';
 import {
   CalculationInputs,
   CostSetting,
@@ -122,6 +123,42 @@ function parseNum(v: unknown): number {
   return Number(s) || 0;
 }
 
+/**
+ * Büyük listelerde ham sayfa verisi localStorage kotasını aşabiliyor.
+ * Kota dolarsa önce ham veriyi atarak, o da olmazsa kaydı silerek devam eder;
+ * setItem'ın hata fırlatıp uygulamayı beyaz ekrana düşürmesini engeller.
+ */
+function persistTarifeState(data: PersistedTarifeState, onToast: (msg: string) => void): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_KOMISYON_TARIFE_STATE, JSON.stringify(data));
+    return;
+  } catch (e) {
+    if (!isQuotaError(e)) {
+      console.error(e);
+      return;
+    }
+  }
+  try {
+    localStorage.setItem(
+      STORAGE_KEY_KOMISYON_TARIFE_STATE,
+      JSON.stringify({ ...data, originalSheetRows: [] })
+    );
+    onToast('Liste çok büyük: sayfayı yenilerseniz dosyayı tekrar yüklemeniz gerekir.');
+    return;
+  } catch (e) {
+    if (!isQuotaError(e)) {
+      console.error(e);
+      return;
+    }
+  }
+  try {
+    localStorage.removeItem(STORAGE_KEY_KOMISYON_TARIFE_STATE);
+  } catch {
+    // yoksay
+  }
+  onToast('Depolama limiti aşıldı: bu liste kaydedilemedi, hesaplama devam ediyor.');
+}
+
 function getRateKey(row: KomisyonTeklifRow): string {
   return row.categorizasyon?.trim() || row.category;
 }
@@ -169,7 +206,7 @@ export const TrendyolKomisyonTarifeWizard: React.FC<TrendyolKomisyonTarifeWizard
       useAltLimitFallback,
       includeOverhead: komisyonIncludeOverhead,
     };
-    localStorage.setItem(STORAGE_KEY_KOMISYON_TARIFE_STATE, JSON.stringify(data));
+    persistTarifeState(data, onToast);
   }, [rows, categoryRates, results, originalSheetRows, useAltLimitFallback, komisyonIncludeOverhead]);
 
   const uniqueCategories = useMemo(

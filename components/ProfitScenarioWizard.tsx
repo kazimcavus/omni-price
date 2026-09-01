@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { parseExcelToJson, findHeaderKey, getByHeader, toNumber } from '../utils/excel';
+import { safeSetItem } from '../utils/storage';
 import {
   CalculationInputs,
   CostSetting,
@@ -82,7 +83,9 @@ export const ProfitScenarioWizard: React.FC<ProfitScenarioWizardProps> = ({
   // Persist state
   useEffect(() => {
     const data: PersistedState = { rows, channelKey, discountText, includeOverhead, profitType };
-    localStorage.setItem(STORAGE_KEY_PROFIT_SCENARIO_STATE, JSON.stringify(data));
+    if (!safeSetItem(STORAGE_KEY_PROFIT_SCENARIO_STATE, data)) {
+      onToast('Depolama limiti aşıldı: liste kaydedilemedi, hesaplama devam ediyor.');
+    }
   }, [rows, channelKey, discountText, includeOverhead, profitType]);
 
   const discountRates = useMemo(() => parseDiscountList(discountText), [discountText]);

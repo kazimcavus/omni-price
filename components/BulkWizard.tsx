@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { parseExcelToJson, findHeaderKey, getByHeader } from '../utils/excel';
+import { safeSetItem } from '../utils/storage';
 import {
   CalculationInputs,
   CostSetting,
@@ -83,7 +84,9 @@ export const BulkWizard: React.FC<BulkWizardProps> = ({
   // Persist state
   useEffect(() => {
     const data: PersistedBulkState = { rows, categoryRates, results, includeOverhead: bulkIncludeOverhead };
-    localStorage.setItem(STORAGE_KEY_BULK_STATE, JSON.stringify(data));
+    if (!safeSetItem(STORAGE_KEY_BULK_STATE, data)) {
+      onToast('Depolama limiti aşıldı: liste kaydedilemedi, hesaplama devam ediyor.');
+    }
   }, [rows, categoryRates, results, bulkIncludeOverhead]);
 
   const uniqueCategories = useMemo(() => {

@@ -12,13 +12,13 @@ export const DEFAULT_SETTINGS: CostSetting[] = [
   { key: 'platformFee', label: 'Platform Hizmet Bedeli (Trendyol)', value: 10.99, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   
   // Kargo
-  { key: 'marketplaceShip', label: 'Trendyol Kargo', value: 107.98, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'marketplaceShip', label: 'Trendyol Kargo', value: 90, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'marketplaceRetShip', label: 'Trendyol İade Kargo', value: 129.99, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
-  { key: 'siteShip', label: 'Site Kargo', value: 156, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'siteShip', label: 'Site Kargo', value: 90, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'pazaramaShip', label: 'Pazarama Kargo', value: 134.33, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
 
   // Ambalaj
-  { key: 'box', label: 'Kutu', value: 14.5, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
+  { key: 'box', label: 'Kutu', value: 16, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'card', label: 'Teşekkür Kartı', value: 1.2, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'bag', label: 'Kutu Poşeti', value: 3.85, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
   { key: 'tape', label: 'İade Emniyet Şeridi', value: 16, suffix: 'TL', isPercentage: false, kdvMode: 'HARIC', kdvRate: 20 },
